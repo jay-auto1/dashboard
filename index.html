@@ -266,8 +266,7 @@ tbody td:first-child { text-align: left; font-family: 'Noto Sans KR', sans-serif
   <div class="table-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
     <span>캠페인 유형별 데이터</span>
     <div style="display:flex;align-items:center;gap:8px">
-      <button id="tablePrevBtn" class="date-btn" onclick="toggleTablePrev()" style="font-size:11px;padding:4px 12px;border-radius:6px">동기간 비교</button>
-      <div style="position:relative">
+<div style="position:relative">
         <button class="col-dropdown-btn" id="colDropBtn" onclick="toggleColDrop()">
           컬럼 선택 <span id="colCount"></span>
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="margin-left:4px;vertical-align:middle"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -288,8 +287,7 @@ tbody td:first-child { text-align: left; font-family: 'Noto Sans KR', sans-serif
   <div class="table-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
     <span>캠페인/그룹별 데이터</span>
     <div style="display:flex;align-items:center;gap:8px">
-      <button id="campPrevBtn" class="date-btn" onclick="toggleCampPrev()" style="font-size:11px;padding:4px 12px;border-radius:6px">동기간 비교</button>
-      <div style="position:relative">
+<div style="position:relative">
         <button class="col-dropdown-btn" id="campColDropBtn" onclick="toggleCampColDrop()">
           컬럼 선택 <span id="campColCount"></span>
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="margin-left:4px;vertical-align:middle"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -314,8 +312,7 @@ tbody td:first-child { text-align: left; font-family: 'Noto Sans KR', sans-serif
   <div class="table-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
     <span>제품별 데이터</span>
     <div style="display:flex;align-items:center;gap:8px">
-      <button id="prodPrevBtn" class="date-btn" onclick="toggleProdPrev()" style="font-size:11px;padding:4px 12px;border-radius:6px">동기간 비교</button>
-      <div style="position:relative">
+<div style="position:relative">
         <button class="col-dropdown-btn" id="prodColDropBtn" onclick="toggleProdColDrop()">
           컬럼 선택 <span id="prodColCount"></span>
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="margin-left:4px;vertical-align:middle"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1291,32 +1288,12 @@ function getEffectiveCols() {
 
 var tableSort     = {key: null, asc: true};
 var campTableSort = {key: 'cost', asc: false};
-var campPrevMode  = false;
-var tablePrevMode = false;
+var campPrevMode  = false; // 외부용: 동기간 비교 비활성화
+var tablePrevMode = false; // 외부용: 동기간 비교 비활성화
 
-function toggleTablePrev() {
-  tablePrevMode = !tablePrevMode;
-  var btn = document.getElementById('tablePrevBtn');
-  if (btn) {
-    btn.style.background  = tablePrevMode ? 'var(--text)' : 'transparent';
-    btn.style.color       = tablePrevMode ? 'var(--bg)'   : 'var(--muted)';
-    btn.style.borderColor = tablePrevMode ? 'var(--text)' : 'var(--border2)';
-  }
-  var bk = brandKeys(), ck = chKeys();
-  var cm = sumData(bk, ck, RAW);
-  renderTable(cm, ck);
-}
+function toggleTablePrev() {}
 
-function toggleCampPrev() {
-  campPrevMode = !campPrevMode;
-  var btn = document.getElementById('campPrevBtn');
-  if (btn) {
-    btn.style.background  = campPrevMode ? 'var(--text)' : 'transparent';
-    btn.style.color       = campPrevMode ? 'var(--bg)'   : 'var(--muted)';
-    btn.style.borderColor = campPrevMode ? 'var(--text)' : 'var(--border2)';
-  }
-  renderCampaignTable();
-}
+function toggleCampPrev() {}
 var expandedCamps  = {}; // 'campName' → true/false
 var expandedGroups = {}; // 'campName__groupName' → true/false
 
@@ -2173,16 +2150,7 @@ var prodSelectedCols = ['cost','revenue','roas','conversions','cpa','clicks','ct
 var prodTableSort = {key: 'cost', asc: false};
 var prodPrevMode = false;
 
-function toggleProdPrev() {
-  prodPrevMode = !prodPrevMode;
-  var btn = document.getElementById('prodPrevBtn');
-  if (btn) {
-    btn.style.background  = prodPrevMode ? 'var(--text)' : 'transparent';
-    btn.style.color       = prodPrevMode ? 'var(--bg)'   : 'var(--muted)';
-    btn.style.borderColor = prodPrevMode ? 'var(--text)' : 'var(--border2)';
-  }
-  renderProductTable();
-}
+function toggleProdPrev() {}
 
 function buildProdColDropdown() {
   var html = '';
