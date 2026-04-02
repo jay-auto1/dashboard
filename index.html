@@ -470,7 +470,7 @@ function aggregateNSAHierarchyAimban(rows, dateFrom, dateTo, chKey) {
     var rowKey = tp === '브랜드검색' ? 'nbsa' : tp === '쇼핑검색' ? 'ngfa' : tp === '파워컨텐츠' ? 'kakao' : 'nsa';
     if (chKey !== 'all' && rowKey !== chKey) continue;
     addToHierarchy(out, r['캠페인명']||'(미분류)', r['광고그룹명']||'', null, dateStr, dateFrom, dateTo,
-      Number(r['총비용(vat-)'])||0, Number(r['노출수'])||0, Number(r['클릭수'])||0,
+      Number(r['총비용(vat+)'])||0, Number(r['노출수'])||0, Number(r['클릭수'])||0,
       Number(r['구매완료 전환수'])||0, Number(r['구매완료 매출액'])||0,
       Number(r['장바구니 전환수'])||0, Number(r['장바구니 매출액'])||0);
   }
@@ -528,7 +528,7 @@ function loadAimban(callback) {
                 : tp === '파워컨텐츠' ? 'kakao'
                 : 'nsa';
         if (!byType[key][dateStr]) byType[key][dateStr] = {date:dateStr, cost:0, impressions:0, clicks:0, conversions:0, revenue:0};
-        byType[key][dateStr].cost        += Number(r['총비용(vat-)'])      || 0;
+        byType[key][dateStr].cost        += Number(r['총비용(vat+)'])      || 0;
         byType[key][dateStr].impressions += Number(r['노출수'])             || 0;
         byType[key][dateStr].clicks      += Number(r['클릭수'])             || 0;
         byType[key][dateStr].conversions += Number(r['구매완료 전환수'])     || 0;
@@ -565,7 +565,7 @@ function applyAimban(apiData, dateFrom, dateTo) {
       var tp = r['캠페인유형'] || '';
       var key = tp === '브랜드검색' ? 'nbsa' : tp === '쇼핑검색' ? 'ngfa' : tp === '파워컨텐츠' ? 'kakao' : 'nsa';
       if (!byType[key][dateStr]) byType[key][dateStr] = {date:dateStr, cost:0, impressions:0, clicks:0, conversions:0, revenue:0};
-      byType[key][dateStr].cost        += Number(r['총비용(vat-)'])      || 0;
+      byType[key][dateStr].cost        += Number(r['총비용(vat+)'])      || 0;
       byType[key][dateStr].impressions += Number(r['노출수'])             || 0;
       byType[key][dateStr].clicks      += Number(r['클릭수'])             || 0;
       byType[key][dateStr].conversions += Number(r['구매완료 전환수'])     || 0;
@@ -2226,7 +2226,7 @@ function renderProductTable() {
     if (!dateStr || dateStr < dateFrom || dateStr > dateTo) continue;
     var prod = (r['제품'] || '').trim() || '(미분류)';
     if (!prodMap[prod]) prodMap[prod] = {name:prod, cost:0, impressions:0, clicks:0, conversions:0, revenue:0, cart_conv:0, cart_rev:0};
-    prodMap[prod].cost        += Number(r['총비용(vat-)'])     || 0;
+    prodMap[prod].cost        += Number(r['총비용(vat+)'])     || 0;
     prodMap[prod].impressions += Number(r['노출수'])            || 0;
     prodMap[prod].clicks      += Number(r['클릭수'])            || 0;
     prodMap[prod].conversions += Number(r['구매완료 전환수'])    || 0;
@@ -2277,7 +2277,7 @@ function renderProductTable() {
         var pprod = (pr['제품'] || '').trim() || '(미분류)';
         if (pprod !== r.name) continue;
         if (!prevProdMap[pprod]) prevProdMap[pprod] = {name:pprod, cost:0, impressions:0, clicks:0, conversions:0, revenue:0, cart_conv:0, cart_rev:0};
-        prevProdMap[pprod].cost        += Number(pr['총비용(vat-)'])     || 0;
+        prevProdMap[pprod].cost        += Number(pr['총비용(vat+)'])     || 0;
         prevProdMap[pprod].impressions += Number(pr['노출수'])            || 0;
         prevProdMap[pprod].clicks      += Number(pr['클릭수'])            || 0;
         prevProdMap[pprod].conversions += Number(pr['구매완료 전환수'])    || 0;
