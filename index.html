@@ -23,7 +23,6 @@
   --nbsa: #7c5fc9;
   --kakao: #c4a800;
   --google_app: #d9720f;
-  --hyper: #7c5fc9;
   --up: #1a9e52;
   --down: #d93636;
 }
@@ -64,11 +63,6 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 .tab .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 .tab.active { background: var(--text); color: var(--bg); border-color: var(--text); }
 .tab:hover:not(.active) { color: var(--text); border-color: var(--text); }
-.subbrand-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; padding: 10px 14px; background: rgba(167,139,250,.07); border: 1px solid rgba(167,139,250,.18); border-radius: 10px; flex-wrap: wrap; }
-.subbrand-label { font-family: 'Inter', sans-serif; font-size: 10px; color: var(--hyper); letter-spacing: 1px; text-transform: uppercase; margin-right: 4px; }
-.sub-tab { padding: 5px 13px; border-radius: 6px; border: 1px solid rgba(167,139,250,.3); background: transparent; color: var(--hyper); font-size: 12px; font-weight: 500; cursor: pointer; transition: all .15s; }
-.sub-tab.active { background: var(--hyper); color: var(--bg); border-color: var(--hyper); }
-.sub-tab:hover:not(.active) { background: rgba(167,139,250,.12); }
 
 /* KPI grid */
 .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 20px; }
@@ -179,29 +173,7 @@ tbody td:first-child { text-align: left; font-family: 'Noto Sans KR', sans-serif
 .kpi-card:nth-child(9){animation-delay:.27s} .kpi-card:nth-child(10){animation-delay:.30s}
 .kpi-card:nth-child(11){animation-delay:.33s}
 
-/* Budget section */
-.budget-section { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin-bottom:20px; }
-.budget-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:10px; }
-.budget-period-selector { display:flex; align-items:center; gap:6px; }
-.budget-select { font-family:'DM Mono',monospace; font-size:11px; padding:5px 10px; border-radius:6px; border:1px solid var(--border2); background:var(--bg3); color:var(--text); cursor:pointer; outline:none; }
-.budget-title { font-size:14px; font-weight:500; color:var(--text); }
-.budget-edit-btn { font-family:'DM Mono',monospace; font-size:11px; padding:5px 12px; border-radius:6px; border:1px solid var(--border2); background:transparent; color:var(--muted); cursor:pointer; transition:all .15s; }
-.budget-edit-btn:hover { color:var(--text); border-color:var(--text); }
-.budget-save-btn { font-family:'DM Mono',monospace; font-size:11px; padding:5px 14px; border-radius:6px; border:none; background:var(--text); color:var(--bg); cursor:pointer; margin-top:10px; }
-.budget-save-btn:hover { opacity:.8; }
-.budget-input-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:4px; }
-.budget-input-item { display:flex; flex-direction:column; gap:4px; }
-.budget-input-label { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:.5px; }
-.budget-input-field { font-family:'DM Mono',monospace; font-size:12px; padding:6px 10px; border-radius:6px; border:1px solid var(--border2); background:var(--bg3); color:var(--text); width:140px; outline:none; }
-.budget-input-field:focus { border-color:var(--text); }
-.budget-bars { margin-top:4px; }
-.budget-row { display:flex; align-items:center; gap:12px; }
-.budget-row-label { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); width:80px; flex-shrink:0; }
-.budget-bar-wrap { flex:1; height:8px; background:var(--bg3); border-radius:4px; overflow:hidden; }
-.budget-bar-fill { height:100%; border-radius:4px; transition:width .6s ease; }
-.budget-bar-fill.over { background:var(--down); }
-.budget-row-nums { font-family:'DM Mono',monospace; font-size:11px; color:var(--text); white-space:nowrap; min-width:200px; text-align:right; }
-.budget-row-pct { font-family:'DM Mono',monospace; font-size:12px; font-weight:500; min-width:48px; text-align:right; }
+
 </style>
 </head>
 <body>
@@ -261,19 +233,7 @@ tbody td:first-child { text-align: left; font-family: 'Noto Sans KR', sans-serif
 
 </div><!-- /sticky-filters -->
 
-<div class="budget-section" id="budgetSection">
-  <div class="budget-header" onclick="toggleBudgetSection()" style="cursor:pointer">
-    <div style="display:flex;align-items:center;gap:8px">
-      <svg id="budgetArrow" width="14" height="14" viewBox="0 0 14 14" fill="none" style="transition:transform .2s;transform:rotate(-90deg)"><path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <span class="budget-title">예산 소진 현황</span>
-    </div>
-    <div class="budget-period-selector" onclick="event.stopPropagation()">
-      <select class="budget-select" id="budgetYearSelect" onchange="setBudgetYear(this.value)"></select>
-      <select class="budget-select" id="budgetMonthSelect" onchange="setBudgetMonth(this.value)"></select>
-    </div>
-  </div>
-  <div class="budget-bars" id="budgetBars" style="display:none"></div>
-</div>
+
 
 
 <div class="kpi-grid" id="kpiGrid"></div>
@@ -354,18 +314,7 @@ var RAW = {
 // ── 아임반 CSV URL ─────────────────────────────────────────────────────────
 // Google Sheets 웹게시 URL을 아래에 입력하세요
 var CSV_URLS_AIMBAN = {
-  nsa: 'YOUR_AIMBAN_SHEET_CSV_URL_HERE'
-};
-
-var CSV_URLS_MINOXELL = {
-  nsa:  'https://docs.google.com/spreadsheets/d/e/2PACX-1vTGKrM6s-0cb1iLxW_CKAyTgzIljpqB2BsxCb4b-Mr5ZeU8AalPQpAq1LWXeo8kZQlsOKJaaAe766hd/pub?gid=688098510&single=true&output=csv',
-  meta: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTGKrM6s-0cb1iLxW_CKAyTgzIljpqB2BsxCb4b-Mr5ZeU8AalPQpAq1LWXeo8kZQlsOKJaaAe766hd/pub?gid=1964641815&single=true&output=csv',
-  ngfa: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTGKrM6s-0cb1iLxW_CKAyTgzIljpqB2BsxCb4b-Mr5ZeU8AalPQpAq1LWXeo8kZQlsOKJaaAe766hd/pub?gid=1678752996&single=true&output=csv'
-};
-
-var CSV_URLS_HYPER = {
-  nsa:  'https://docs.google.com/spreadsheets/d/e/2PACX-1vSpuU4aEsm0x1DLxgThPD-iwkGtUPVAC5Pg9-uxoc4R1bjmYzedEwo38vfpH0yQ-HjJa9raxWe0PcYR/pub?gid=1105059263&single=true&output=csv',
-  ngfa: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSpuU4aEsm0x1DLxgThPD-iwkGtUPVAC5Pg9-uxoc4R1bjmYzedEwo38vfpH0yQ-HjJa9raxWe0PcYR/pub?gid=713595739&single=true&output=csv'
+  nsa: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR5vJK5czufZwfp-IsQZUpN70-kB8RrbJhtMCn1NKQepdxD9Iwmqh0bmav-3lvOQptieyAjM_ePP3fl/pub?gid=332969914&single=true&output=csv'
 };
 
 var sheetsCache = {};
@@ -406,273 +355,28 @@ function addToHierarchy(hier, camp, group, creative, dateStr, dateFrom, dateTo, 
 }
 
 // NSA 계층 집계
-function aggregateNSAHierarchy(rows, dateFrom, dateTo) {
-  var nsa = {}, nbsa = {};
-  for (var i = 0; i < rows.length; i++) {
-    var r = rows[i];
-    var dateStr = (r['일자'] || '').slice(0, 10);
-    if (!dateStr) continue;
-    var isBSA = (r['캠페인유형'] || '').indexOf('브랜드검색') !== -1;
-    var target = isBSA ? nbsa : nsa;
-    addToHierarchy(target, r['캠페인명']||'(미분류)', r['광고그룹명']||'', null, dateStr, dateFrom, dateTo,
-      Number(r['총비용(vat-)'])||0, Number(r['노출수'])||0, Number(r['클릭수'])||0, Number(r['구매완료 전환수'])||0, Number(r['구매완료 매출액'])||0,
-      Number(r['장바구니 전환수'])||0, Number(r['장바구니 매출액'])||0);
-  }
-  return {nsa: nsa, nbsa: nbsa};
-}
-
 // 공통 계층 집계 (Meta, Google)
-function aggregateGenericHierarchy(rows, dateFrom, dateTo, creativeCol) {
-  var out = {};
-  for (var i = 0; i < rows.length; i++) {
-    var r = rows[i];
-    var dateStr = (r['일자'] || '').slice(0, 10);
-    if (!dateStr) continue;
-    var creative = creativeCol ? (r[creativeCol] || '') : null;
-    addToHierarchy(out, r['캠페인명']||'(미분류)', r['광고그룹명']||'', creative, dateStr, dateFrom, dateTo,
-      Number(r['총비용(vat-)'])||0, Number(r['노출수'])||0, Number(r['클릭수'])||0, Number(r['구매완료 전환수'])||0, Number(r['구매완료 매출액'])||0);
-  }
-  return out;
-}
-
 // 스케쳐스 Google 전용: 총구매수/총매출액, 앱 캠페인은 앱설치수
-function aggregateSkechersGoogleHierarchy(rows, dateFrom, dateTo, isApp) {
-  var out = {};
-  for (var i = 0; i < rows.length; i++) {
-    var r = rows[i];
-    var type = r['캠페인유형'] || '';
-    if (isApp  && type !== '앱') continue;
-    if (!isApp && type === '앱') continue;
-    var dateStr = (r['일자'] || '').slice(0, 10);
-    if (!dateStr) continue;
-    var installs = isApp ? ((Number(r['앱설치(Android)'])||0) + (Number(r['앱설치(iOS)'])||0)) : 0;
-    var conv    = isApp ? installs : (Number(r['총 구매수'])||0);
-    var rev     = Number(r['총 매출액'])||0;
-    addToHierarchy(out, r['캠페인명']||'(미분류)', r['광고그룹명']||'', null, dateStr, dateFrom, dateTo,
-      Number(r['총비용(vat-)'])||0, Number(r['노출수'])||0, Number(r['클릭수'])||0, conv, rev, 0, 0, installs);
-  }
-  return out;
-}
-
 // GFA 계층 집계
-function aggregateGFAHierarchy(rows, dateFrom, dateTo) {
-  var minoxell = {}, oliveyoung = {};
-  for (var i = 0; i < rows.length; i++) {
-    var r = rows[i];
-    var rawDate = r['일별'] || '';
-    var dateStr = rawDate.replace(/\./g, '-').replace(/-$/, '').slice(0, 10);
-    if (!dateStr || dateStr.length < 10) continue;
-    var isOlive = (r['광고그룹명'] || '').indexOf('올리브영') !== -1;
-    var target = isOlive ? oliveyoung : minoxell;
-    addToHierarchy(target, r['캠페인명']||'(미분류)', r['광고그룹명']||'', r['광고소재']||'', dateStr, dateFrom, dateTo,
-      Number((r['총비용(vat-)']||'').replace(/,/g,''))||0,
-      Number((r['노출수']||'').replace(/,/g,''))||0,
-      Number((r['클릭수']||'').replace(/,/g,''))||0,
-      Number((r['구매완료 전환수']||'').replace(/,/g,''))||0,
-      Number((r['구매완료 매출액']||'').replace(/,/g,''))||0,
-      Number((r['장바구니 전환수']||'').replace(/,/g,''))||0,
-      Number((r['장바구니 매출액']||'').replace(/,/g,''))||0);
-  }
-  return {minoxell: minoxell, oliveyoung: oliveyoung};
-}
-
 // 하이퍼 NSA 계층
-function aggregateHyperNSAHierarchy(rows, dateFrom, dateTo) {
-  var out = {};
-  var BRAND_MAP = {'키친에이드':'kitchenaid','에코백스':'ecovacs','아노바':'anova'};
-  for (var i = 0; i < rows.length; i++) {
-    var r = rows[i];
-    var dateStr = (r['일자'] || '').slice(0, 10);
-    if (!dateStr) continue;
-    var brKey = BRAND_MAP[(r['브랜드']||'').trim()];
-    if (!brKey) continue;
-    var campName = r['캠페인명'] || '';
-    if (brKey === 'kitchenaid' && campName.indexOf('코드리스') !== -1) brKey = 'kitchenaid_codeless';
-    var isBSA = (r['캠페인유형']||'').indexOf('브랜드검색') !== -1;
-    var storageKey = brKey + '__' + (isBSA ? 'nbsa' : 'nsa');
-    if (!out[storageKey]) out[storageKey] = {};
-    addToHierarchy(out[storageKey], campName||'(미분류)', r['광고그룹명']||'', null, dateStr, dateFrom, dateTo,
-      Number(r['총비용(vat-)'])||0, Number(r['노출수'])||0, Number(r['클릭수'])||0, Number(r['구매완료 전환수'])||0, Number(r['구매완료 매출액'])||0);
-  }
-  return out;
-}
-
 // 하이퍼 NGFA 계층
-function aggregateHyperNGFAHierarchy(rows, dateFrom, dateTo) {
-  var out = {};
-  var BK = [{keyword:'키친에이드',key:'kitchenaid'},{keyword:'에코백스',key:'ecovacs'},{keyword:'아노바',key:'anova'}];
-  for (var i = 0; i < rows.length; i++) {
-    var r = rows[i];
-    var rawDate = r['일별'] || '';
-    var dateStr = rawDate.replace(/\./g, '-').replace(/-$/, '').slice(0, 10);
-    if (!dateStr || dateStr.length < 10) continue;
-    var camp = (r['캠페인명'] || '').toLowerCase();
-    var brKey = null;
-    for (var k = 0; k < BK.length; k++) { if (camp.indexOf(BK[k].keyword) !== -1) { brKey = BK[k].key; break; } }
-    if (!brKey) continue;
-    var storageKey = brKey + '__ngfa';
-    if (!out[storageKey]) out[storageKey] = {};
-    addToHierarchy(out[storageKey], r['캠페인명']||'(미분류)', r['광고그룹명']||'', r['광고소재']||'', dateStr, dateFrom, dateTo,
-      Number((r['총비용(vat-)']||'').replace(/,/g,''))||0,
-      Number((r['노출수']||'').replace(/,/g,''))||0,
-      Number((r['클릭수']||'').replace(/,/g,''))||0,
-      Number((r['구매완료 전환수']||'').replace(/,/g,''))||0,
-      Number((r['구매완료 매출액']||'').replace(/,/g,''))||0,
-      Number((r['장바구니 전환수']||'').replace(/,/g,''))||0,
-      Number((r['장바구니 매출액']||'').replace(/,/g,''))||0);
-  }
-  return out;
-}
-
 // 계층 캠페인 데이터 가져오기
 function getCampaignHierarchy(brKey, chKey, dateFrom, dateTo) {
   var cacheKey = 'h__' + brKey + '__' + chKey + '__' + dateFrom + '__' + dateTo;
   if (campaignCache[cacheKey]) return campaignCache[cacheKey];
   var result = {};
   if (brKey === 'aimban' && sheetsCache.aimban) {
-    var rows = sheetsCache.aimban._rawNSA || [];
-    var H = aggregateNSAHierarchyAimban(rows, dateFrom, dateTo, chKey);
-    result = H;
-    campaignCache[cacheKey] = result;
-    return result;
-  }
-  if (sheetsCache.skechers && (brKey === 'skechers_official' || brKey === 'skechers_app')) {
-    var p = sheetsCache.skechers;
-    var nsaH     = aggregateNSAHierarchy(p._rawNSA || [], dateFrom, dateTo);
-    var googH    = p._rawGoogle ? aggregateSkechersGoogleHierarchy(p._rawGoogle, dateFrom, dateTo, false) : {};
-    var googAppH = p._rawGoogle ? aggregateSkechersGoogleHierarchy(p._rawGoogle, dateFrom, dateTo, true)  : {};
-    if (brKey === 'skechers_official' && chKey === 'nsa')    result = nsaH.nsa;
-    if (brKey === 'skechers_official' && chKey === 'nbsa')   result = nsaH.nbsa;
-    if (brKey === 'skechers_official' && chKey === 'google') result = googH;
-    if (brKey === 'skechers_app'      && chKey === 'google') result = googAppH;
-  } else if (sheetsCache.minoxell && (brKey === 'minoxell' || brKey === 'oliveyoung')) {
-    var pm = sheetsCache.minoxell;
-    var nsaHM  = aggregateNSAHierarchy(pm._rawNSA || [], dateFrom, dateTo);
-    var metaHM = aggregateGenericHierarchy(pm._rawMeta || [], dateFrom, dateTo, '광고소재');
-    var gfaHM  = aggregateGFAHierarchy(pm._rawNGFA || [], dateFrom, dateTo);
-    if (brKey === 'minoxell'   && chKey === 'nsa')  result = nsaHM.nsa;
-    if (brKey === 'minoxell'   && chKey === 'nbsa') result = nsaHM.nbsa;
-    if (brKey === 'minoxell'   && chKey === 'meta') result = metaHM;
-    if (brKey === 'minoxell'   && chKey === 'ngfa') result = gfaHM.minoxell;
-    if (brKey === 'oliveyoung' && chKey === 'ngfa') result = gfaHM.oliveyoung;
-  } else if (sheetsCache.hyper) {
-    var ph = sheetsCache.hyper;
-    var nsaHH  = aggregateHyperNSAHierarchy(ph._rawNSA || [], dateFrom, dateTo);
-    var ngfaHH = aggregateHyperNGFAHierarchy(ph._rawNGFA || [], dateFrom, dateTo);
-    var hKey = brKey + '__' + chKey;
-    result = nsaHH[hKey] || ngfaHH[hKey] || {};
+    result = aggregateNSAHierarchyAimban(sheetsCache.aimban._rawNSA || [], dateFrom, dateTo, chKey);
   }
   campaignCache[cacheKey] = result;
   return result;
 }
 
 // 네이버SA → 캠페인별 {nsa:{campName:data}, nbsa:{campName:data}}
-function aggregateNSACampaign(rows, dateFrom, dateTo) {
-  var nsa = {}, nbsa = {};
-  for (var i = 0; i < rows.length; i++) {
-    var r = rows[i];
-    var dateStr = (r['일자'] || '').slice(0, 10);
-    if (!dateStr) continue;
-    var isBSA = (r['캠페인유형'] || '').indexOf('브랜드검색') !== -1;
-    var target = isBSA ? nbsa : nsa;
-    var camp = r['캠페인명'] || '(미분류)';
-    addToCampaign(target, camp, dateStr, dateFrom, dateTo,
-      Number(r['총비용(vat-)']) || 0, Number(r['노출수']) || 0,
-      Number(r['클릭수']) || 0, Number(r['구매완료 전환수']) || 0,
-      Number(r['구매완료 매출액']) || 0);
-  }
-  return {nsa: nsa, nbsa: nbsa};
-}
-
 // 공통 CSV → 캠페인별
-function aggregateGenericCampaign(rows, dateFrom, dateTo) {
-  var out = {};
-  for (var i = 0; i < rows.length; i++) {
-    var r = rows[i];
-    var dateStr = (r['일자'] || '').slice(0, 10);
-    if (!dateStr) continue;
-    var camp = r['캠페인명'] || '(미분류)';
-    addToCampaign(out, camp, dateStr, dateFrom, dateTo,
-      Number(r['총비용(vat-)']) || 0, Number(r['노출수']) || 0,
-      Number(r['클릭수']) || 0, Number(r['구매완료 전환수']) || 0,
-      Number(r['구매완료 매출액']) || 0);
-  }
-  return out;
-}
-
-// GFA → 캠페인별 {minoxell:{}, oliveyoung:{}}
-function aggregateGFACampaign(rows, dateFrom, dateTo) {
-  var minoxell = {}, oliveyoung = {};
-  for (var i = 0; i < rows.length; i++) {
-    var r = rows[i];
-    var rawDate = r['일별'] || '';
-    var dateStr = rawDate.replace(/\./g, '-').replace(/-$/, '').slice(0, 10);
-    if (!dateStr || dateStr.length < 10) continue;
-    var isOlive = (r['광고그룹명'] || '').indexOf('올리브영') !== -1;
-    var target = isOlive ? oliveyoung : minoxell;
-    var camp = r['캠페인명'] || '(미분류)';
-    addToCampaign(target, camp, dateStr, dateFrom, dateTo,
-      Number((r['총비용(vat-)'] || '').replace(/,/g,'')) || 0,
-      Number((r['노출수'] || '').replace(/,/g,'')) || 0,
-      Number((r['클릭수'] || '').replace(/,/g,'')) || 0,
-      Number((r['구매완료 전환수'] || '').replace(/,/g,'')) || 0,
-      Number((r['구매완료 매출액'] || '').replace(/,/g,'')) || 0);
-  }
-  return {minoxell: minoxell, oliveyoung: oliveyoung};
-}
-
+// 캠페인별 집계
 // 하이퍼 NSA → 캠페인별
-function aggregateHyperNSACampaign(rows, dateFrom, dateTo) {
-  var out = {};
-  var BRAND_MAP = {'키친에이드':'kitchenaid','에코백스':'ecovacs','아노바':'anova'};
-  for (var i = 0; i < rows.length; i++) {
-    var r = rows[i];
-    var dateStr = (r['일자'] || '').slice(0, 10);
-    if (!dateStr) continue;
-    var brKey = BRAND_MAP[(r['브랜드'] || '').trim()];
-    if (!brKey) continue;
-    var campName = r['캠페인명'] || '';
-    if (brKey === 'kitchenaid' && campName.indexOf('코드리스') !== -1) brKey = 'kitchenaid_codeless';
-    var isBSA = (r['캠페인유형'] || '').indexOf('브랜드검색') !== -1;
-    var chKey = isBSA ? 'nbsa' : 'nsa';
-    var storageKey = brKey + '__' + chKey;
-    if (!out[storageKey]) out[storageKey] = {};
-    addToCampaign(out[storageKey], campName, dateStr, dateFrom, dateTo,
-      Number(r['총비용(vat-)']) || 0, Number(r['노출수']) || 0,
-      Number(r['클릭수']) || 0, Number(r['구매완료 전환수']) || 0,
-      Number(r['구매완료 매출액']) || 0);
-  }
-  return out;
-}
-
 // 하이퍼 NGFA → 캠페인별
-function aggregateHyperNGFACampaign(rows, dateFrom, dateTo) {
-  var out = {};
-  var BRAND_KEYWORDS = [{keyword:'키친에이드',key:'kitchenaid'},{keyword:'에코백스',key:'ecovacs'},{keyword:'아노바',key:'anova'}];
-  for (var i = 0; i < rows.length; i++) {
-    var r = rows[i];
-    var rawDate = r['일별'] || '';
-    var dateStr = rawDate.replace(/\./g, '-').replace(/-$/, '').slice(0, 10);
-    if (!dateStr || dateStr.length < 10) continue;
-    var camp = (r['캠페인명'] || '').toLowerCase();
-    var brKey = null;
-    for (var k = 0; k < BRAND_KEYWORDS.length; k++) {
-      if (camp.indexOf(BRAND_KEYWORDS[k].keyword) !== -1) { brKey = BRAND_KEYWORDS[k].key; break; }
-    }
-    if (!brKey) continue;
-    var storageKey = brKey + '__ngfa';
-    if (!out[storageKey]) out[storageKey] = {};
-    var campName = r['캠페인명'] || '(미분류)';
-    addToCampaign(out[storageKey], campName, dateStr, dateFrom, dateTo,
-      Number((r['총비용(vat-)'] || '').replace(/,/g,'')) || 0,
-      Number((r['노출수'] || '').replace(/,/g,'')) || 0,
-      Number((r['클릭수'] || '').replace(/,/g,'')) || 0,
-      Number((r['구매완료 전환수'] || '').replace(/,/g,'')) || 0,
-      Number((r['구매완료 매출액'] || '').replace(/,/g,'')) || 0);
-  }
-  return out;
-}
-
 // 캠페인 데이터 캐시
 var campaignCache = {};
 
@@ -680,42 +384,10 @@ var campaignCache = {};
 function getCampaignData(brKey, chKey, dateFrom, dateTo) {
   var cacheKey = brKey + '__' + chKey + '__' + dateFrom + '__' + dateTo;
   if (campaignCache[cacheKey]) return campaignCache[cacheKey];
-
   var result = {};
-
   if (brKey === 'aimban' && sheetsCache.aimban) {
     result = aggregateNSAHierarchyAimban(sheetsCache.aimban._rawNSA || [], dateFrom, dateTo, chKey);
-    campaignCache[cacheKey] = result;
-    return result;
   }
-
-  if (sheetsCache.skechers && (brKey === 'skechers_official' || brKey === 'skechers_app')) {
-    var p = sheetsCache.skechers;
-    var nsaCamp  = aggregateNSACampaign(p._rawNSA || [], dateFrom, dateTo);
-    var googCamp = p._rawGoogle ? aggregateGenericCampaign(p._rawGoogle.filter(function(r){ return (r['캠페인유형']||'') !== '앱'; }), dateFrom, dateTo) : {};
-    var googAppCamp = p._rawGoogle ? aggregateGenericCampaign(p._rawGoogle.filter(function(r){ return (r['캠페인유형']||'') === '앱'; }), dateFrom, dateTo) : {};
-    if (brKey === 'skechers_official' && chKey === 'nsa')    result = nsaCamp.nsa;
-    if (brKey === 'skechers_official' && chKey === 'nbsa')   result = nsaCamp.nbsa;
-    if (brKey === 'skechers_official' && chKey === 'google') result = googCamp;
-    if (brKey === 'skechers_app'      && chKey === 'google') result = googAppCamp;
-  } else if (sheetsCache.minoxell && (brKey === 'minoxell' || brKey === 'oliveyoung')) {
-    var pm = sheetsCache.minoxell;
-    var nsaCampM  = aggregateNSACampaign(pm._rawNSA || [], dateFrom, dateTo);
-    var metaCampM = aggregateGenericCampaign(pm._rawMeta || [], dateFrom, dateTo);
-    var gfaCampM  = aggregateGFACampaign(pm._rawNGFA || [], dateFrom, dateTo);
-    if (brKey === 'minoxell'   && chKey === 'nsa')  result = nsaCampM.nsa;
-    if (brKey === 'minoxell'   && chKey === 'nbsa') result = nsaCampM.nbsa;
-    if (brKey === 'minoxell'   && chKey === 'meta') result = metaCampM;
-    if (brKey === 'minoxell'   && chKey === 'ngfa') result = gfaCampM.minoxell;
-    if (brKey === 'oliveyoung' && chKey === 'ngfa') result = gfaCampM.oliveyoung;
-  } else if (sheetsCache.hyper) {
-    var ph = sheetsCache.hyper;
-    var nsaCampH  = aggregateHyperNSACampaign(ph._rawNSA || [], dateFrom, dateTo);
-    var ngfaCampH = aggregateHyperNGFACampaign(ph._rawNGFA || [], dateFrom, dateTo);
-    var hKey = brKey + '__' + chKey;
-    result = nsaCampH[hKey] || ngfaCampH[hKey] || {};
-  }
-
   campaignCache[cacheKey] = result;
   return result;
 }
@@ -766,68 +438,7 @@ function aggregateNSAHierarchyAimban(rows, dateFrom, dateTo, chKey) {
 }
 
 // CSV 행 → 날짜별 합산 (네이버SA) → {nsa, nbsa} 분리
-function aggregateNSA(rows) {
-  var nsa = {}, nbsa = {};
-  var COL_DATE  = '일자';
-  var COL_TYPE  = '캠페인유형';
-  var COL_COST  = '총비용(vat-)';
-  var COL_IMPR  = '노출수';
-  var COL_CLICK = '클릭수';
-  var COL_CONV  = '구매완료 전환수';
-  var COL_REV   = '구매완료 매출액';
-
-  for (var i = 0; i < rows.length; i++) {
-    var r = rows[i];
-    var dateStr = r[COL_DATE] ? r[COL_DATE].slice(0, 10) : '';
-    if (!dateStr) continue;
-    var isBSA = (r[COL_TYPE] || '').indexOf('브랜드검색') !== -1;
-    var target = isBSA ? nbsa : nsa;
-    if (!target[dateStr]) target[dateStr] = {date:dateStr, cost:0, impressions:0, clicks:0, conversions:0, revenue:0};
-    target[dateStr].cost        += Number(r[COL_COST])  || 0;
-    target[dateStr].impressions += Number(r[COL_IMPR])  || 0;
-    target[dateStr].clicks      += Number(r[COL_CLICK]) || 0;
-    target[dateStr].conversions += Number(r[COL_CONV])  || 0;
-    target[dateStr].revenue     += Number(r[COL_REV])   || 0;
-  }
-  return {nsa: nsa, nbsa: nbsa};
-}
-
 // CSV 행 → 날짜별 합산 (구글DA, mode: 'official' | 'app')
-function aggregateGoogleDA(rows, mode) {
-  var byDate = {};
-  var COL_DATE    = '일자';
-  var COL_TYPE    = '캠페인유형';
-  var COL_COST    = '총비용(vat-)';
-  var COL_IMPR    = '노출수';
-  var COL_CLICK   = '클릭수';
-  var COL_CONV    = '총 구매수';
-  var COL_REV     = '총 매출액';
-  var COL_APP_AND = '앱설치(Android)';
-  var COL_APP_IOS = '앱설치(iOS)';
-
-  for (var i = 0; i < rows.length; i++) {
-    var r = rows[i];
-    var type = r[COL_TYPE] || '';
-    if (mode === 'app'      && type !== '앱') continue;
-    if (mode === 'official' && type === '앱') continue;
-    var dateStr = r[COL_DATE] ? r[COL_DATE].slice(0, 10) : '';
-    if (!dateStr) continue;
-    if (!byDate[dateStr]) byDate[dateStr] = {date:dateStr, cost:0, impressions:0, clicks:0, conversions:0, revenue:0, app_installs:0};
-    byDate[dateStr].cost        += Number(r[COL_COST])  || 0;
-    byDate[dateStr].impressions += Number(r[COL_IMPR])  || 0;
-    byDate[dateStr].clicks      += Number(r[COL_CLICK]) || 0;
-    byDate[dateStr].revenue     += Number(r[COL_REV])   || 0;
-    if (mode === 'app') {
-      var installs = (Number(r[COL_APP_AND]) || 0) + (Number(r[COL_APP_IOS]) || 0);
-      byDate[dateStr].conversions   += installs;
-      byDate[dateStr].app_installs  += installs;
-    } else {
-      byDate[dateStr].conversions += Number(r[COL_CONV]) || 0;
-    }
-  }
-  return byDate;
-}
-
 // byDate 객체 → 날짜 범위 합산 → {cost,...}
 function sumByDateRange(byDate, dateFrom, dateTo) {
   var out = {cost:0, revenue:0, clicks:0, impressions:0, conversions:0, app_installs:0};
@@ -845,299 +456,11 @@ function sumByDateRange(byDate, dateFrom, dateTo) {
   return out;
 }
 
-function buildSkechersRaw(parsed, dateFrom, dateTo) {
-  var empty = {cost:0, revenue:0, clicks:0, impressions:0, conversions:0, app_installs:0};
-  return {
-    skechers_official: {
-      google: sumByDateRange(parsed.googleOfficial, dateFrom, dateTo),
-      nsa:    sumByDateRange(parsed.nsa,            dateFrom, dateTo),
-      nbsa:   sumByDateRange(parsed.nbsa || {},     dateFrom, dateTo)
-    },
-    skechers_app: {
-      google: sumByDateRange(parsed.googleApp, dateFrom, dateTo),
-      nsa:    empty,
-      nbsa:   empty
-    }
-  };
-}
-
-function buildSkechersPrev(parsed, dateFrom, dateTo) {
-  var f = new Date(dateFrom), t = new Date(dateTo);
-  var diff = t - f;
-  var prevTo   = new Date(f - 1);
-  var prevFrom = new Date(f - diff - 86400000);
-  var pf = prevFrom.toISOString().slice(0, 10);
-  var pt = prevTo.toISOString().slice(0, 10);
-  return buildSkechersRaw(parsed, pf, pt);
-}
-
 // 하이퍼 네이버SA: 브랜드 컬럼 + 캠페인유형으로 분리
-function aggregateHyperNSA(rows) {
-  var out = {}; // { 'kitchenaid__nsa': byDate, 'kitchenaid__nbsa': byDate, ... }
-  var BRAND_MAP = {'키친에이드': 'kitchenaid', '에코백스': 'ecovacs', '아노바': 'anova'};
-
-  for (var i = 0; i < rows.length; i++) {
-    var r = rows[i];
-    var dateStr = (r['일자'] || '').slice(0, 10);
-    if (!dateStr) continue;
-    var brandKr = (r['브랜드'] || '').trim();
-    var brKey = BRAND_MAP[brandKr];
-    if (!brKey) continue;
-    // 키친에이드 중 캠페인명에 '코드리스' 포함되면 별도 키로
-    var campName = (r['캠페인명'] || '');
-    if (brKey === 'kitchenaid' && campName.indexOf('코드리스') !== -1) {
-      brKey = 'kitchenaid_codeless';
-    }
-    var isBSA = (r['캠페인유형'] || '').indexOf('브랜드검색') !== -1;
-    var chKey = isBSA ? 'nbsa' : 'nsa';
-    var storageKey = brKey + '__' + chKey;
-    if (!out[storageKey]) out[storageKey] = {};
-    if (!out[storageKey][dateStr]) out[storageKey][dateStr] = {date:dateStr, cost:0, impressions:0, clicks:0, conversions:0, revenue:0};
-    out[storageKey][dateStr].cost        += Number(r['총비용(vat-)'])      || 0;
-    out[storageKey][dateStr].impressions += Number(r['노출수'])             || 0;
-    out[storageKey][dateStr].clicks      += Number(r['클릭수'])             || 0;
-    out[storageKey][dateStr].conversions += Number(r['구매완료 전환수'])     || 0;
-    out[storageKey][dateStr].revenue     += Number(r['구매완료 매출액'])     || 0;
-  }
-  return out;
-}
-
 // 하이퍼 네이버DA(GFA): 캠페인명으로 브랜드 구분
-function aggregateHyperNGFA(rows) {
-  var out = {};
-  var BRAND_KEYWORDS = [
-    {keyword:'키친에이드', key:'kitchenaid'},
-    {keyword:'에코백스',   key:'ecovacs'},
-    {keyword:'아노바',     key:'anova'}
-  ];
-
-  for (var i = 0; i < rows.length; i++) {
-    var r = rows[i];
-    // 날짜: '일별' 컬럼, 2026.02.28. 형태
-    var rawDate = r['일별'] || '';
-    var dateStr = rawDate.replace(/\./g, '-').replace(/-$/, '').slice(0, 10);
-    if (!dateStr || dateStr.length < 10) continue;
-    var camp = (r['캠페인명'] || '').toLowerCase();
-    var brKey = null;
-    for (var k = 0; k < BRAND_KEYWORDS.length; k++) {
-      if (camp.indexOf(BRAND_KEYWORDS[k].keyword) !== -1) { brKey = BRAND_KEYWORDS[k].key; break; }
-    }
-    if (!brKey) continue;
-    var storageKey = brKey + '__ngfa';
-    if (!out[storageKey]) out[storageKey] = {};
-    if (!out[storageKey][dateStr]) out[storageKey][dateStr] = {date:dateStr, cost:0, impressions:0, clicks:0, conversions:0, revenue:0};
-    out[storageKey][dateStr].cost        += Number((r['총비용(vat-)']      || '').replace(/,/g,'')) || 0;
-    out[storageKey][dateStr].impressions += Number((r['노출수']             || '').replace(/,/g,'')) || 0;
-    out[storageKey][dateStr].clicks      += Number((r['클릭수']             || '').replace(/,/g,'')) || 0;
-    out[storageKey][dateStr].conversions += Number((r['구매완료 전환수']     || '').replace(/,/g,'')) || 0;
-    out[storageKey][dateStr].revenue     += Number((r['구매완료 매출액']     || '').replace(/,/g,'')) || 0;
-  }
-  return out;
-}
-
-function loadHyper(callback) {
-  if (sheetsCache.hyper) { callback(sheetsCache.hyper); return; }
-  showLoading(true);
-  Promise.all([
-    fetch(CSV_URLS_HYPER.nsa).then(function(r){ return r.text(); }),
-    fetch(CSV_URLS_HYPER.ngfa).then(function(r){ return r.text(); })
-  ])
-  .then(function(results) {
-    var nsaRows3  = parseCSV(results[0]);
-    var ngfaRows3 = parseCSV(results[1]);
-    var nsaData   = aggregateHyperNSA(nsaRows3);
-    var ngfaData  = aggregateHyperNGFA(ngfaRows3);
-    var parsed = {_rawNSA: nsaRows3, _rawNGFA: ngfaRows3};
-    var keys = Object.keys(nsaData).concat(Object.keys(ngfaData));
-    for (var i = 0; i < keys.length; i++) {
-      var k = keys[i];
-      if (!parsed[k]) parsed[k] = {};
-      var src = nsaData[k] || ngfaData[k];
-      var dates = Object.keys(src);
-      for (var j = 0; j < dates.length; j++) {
-        parsed[k][dates[j]] = src[dates[j]];
-      }
-    }
-    sheetsCache.hyper = parsed;
-    showLoading(false);
-    callback(parsed);
-  })
-  .catch(function(err) {
-    showLoading(false);
-    console.error('하이퍼 Sheets 로드 실패:', err);
-    callback(null);
-  });
-}
-
-function loadSkechers(callback) {
-  if (sheetsCache.skechers) { callback(sheetsCache.skechers); return; }
-  showLoading(true);
-
-  var nsaPromise    = fetch(CSV_URLS.nsa).then(function(r) { return r.text(); });
-  var googlePromise = fetch(CSV_URLS.google).then(function(r) { return r.text(); });
-
-  Promise.all([nsaPromise, googlePromise])
-    .then(function(results) {
-      var nsaRows    = parseCSV(results[0]);
-      var nsaResult  = aggregateNSA(nsaRows);
-      var googleRows = parseCSV(results[1]);
-      var parsed = {
-        nsa:            nsaResult.nsa,
-        nbsa:           nsaResult.nbsa,
-        googleOfficial: aggregateGoogleDA(googleRows, 'official'),
-        googleApp:      aggregateGoogleDA(googleRows, 'app'),
-        _rawNSA:        nsaRows,
-        _rawGoogle:     googleRows
-      };
-      sheetsCache.skechers = parsed;
-      showLoading(false);
-      callback(parsed);
-    })
-    .catch(function(err) {
-      showLoading(false);
-      console.error('Sheets 로드 실패:', err);
-      callback(null);
-    });
-}
-
 // 공통 날짜별 집계 함수 (네이버SA/GFA/Meta 공용)
-function aggregateGeneric(rows) {
-  var byDate = {};
-  var COL_DATE = '일자';
-  var COL_COST = '총비용(vat-)';
-  var COL_IMPR = '노출수';
-  var COL_CLICK = '클릭수';
-  var COL_CONV = '구매완료 전환수';
-  var COL_REV  = '구매완료 매출액';
-  for (var i = 0; i < rows.length; i++) {
-    var r = rows[i];
-    var dateStr = r[COL_DATE] ? r[COL_DATE].slice(0, 10) : '';
-    if (!dateStr) continue;
-    if (!byDate[dateStr]) byDate[dateStr] = {date:dateStr, cost:0, impressions:0, clicks:0, conversions:0, revenue:0};
-    byDate[dateStr].cost        += Number(r[COL_COST])  || 0;
-    byDate[dateStr].impressions += Number(r[COL_IMPR])  || 0;
-    byDate[dateStr].clicks      += Number(r[COL_CLICK]) || 0;
-    byDate[dateStr].conversions += Number(r[COL_CONV])  || 0;
-    byDate[dateStr].revenue     += Number(r[COL_REV])   || 0;
-  }
-  return byDate;
-}
-
 // GFA 전용: 일자 컬럼이 중복이고 날짜 형식이 2026.01.01. 형태
 // 광고그룹명에 '올리브영' 포함 시 oliveyoung으로 분리
-function aggregateGFA(rows) {
-  var minoxell = {};
-  var oliveyoung = {};
-
-  for (var i = 0; i < rows.length; i++) {
-    var r = rows[i];
-    var rawDate = r['일별'] || '';
-    var dateStr = rawDate.replace(/\./g, '-').replace(/-$/, '').slice(0, 10);
-    if (!dateStr || dateStr.length < 10) continue;
-
-    var isOlive = (r['광고그룹명'] || '').indexOf('올리브영') !== -1;
-    var target = isOlive ? oliveyoung : minoxell;
-
-    if (!target[dateStr]) target[dateStr] = {date:dateStr, cost:0, impressions:0, clicks:0, conversions:0, revenue:0};
-    target[dateStr].cost        += Number(r['총비용(vat-)'])      || 0;
-    target[dateStr].impressions += Number(r['노출수'])             || 0;
-    target[dateStr].clicks      += Number(r['클릭수'])             || 0;
-    target[dateStr].conversions += Number(r['구매완료 전환수'])     || 0;
-    target[dateStr].revenue     += Number(r['구매완료 매출액'])     || 0;
-  }
-  return {minoxell: minoxell, oliveyoung: oliveyoung};
-}
-
-function loadMinoxell(callback) {
-  if (sheetsCache.minoxell) { callback(sheetsCache.minoxell); return; }
-  showLoading(true);
-
-  Promise.all([
-    fetch(CSV_URLS_MINOXELL.nsa).then(function(r){ return r.text(); }),
-    fetch(CSV_URLS_MINOXELL.meta).then(function(r){ return r.text(); }),
-    fetch(CSV_URLS_MINOXELL.ngfa).then(function(r){ return r.text(); })
-  ])
-  .then(function(results) {
-    var nsaRows2   = parseCSV(results[0]);
-    var metaRows2  = parseCSV(results[1]);
-    var ngfaRows2  = parseCSV(results[2]);
-    var nsaResult2 = aggregateNSA(nsaRows2);
-    var gfaResult  = aggregateGFA(ngfaRows2);
-    var parsed = {
-      nsa:             nsaResult2.nsa,
-      nbsa:            nsaResult2.nbsa,
-      meta:            aggregateGeneric(metaRows2),
-      ngfa:            gfaResult.minoxell,
-      oliveyoung_ngfa: gfaResult.oliveyoung,
-      _rawNSA:         nsaRows2,
-      _rawMeta:        metaRows2,
-      _rawNGFA:        ngfaRows2
-    };
-    sheetsCache.minoxell = parsed;
-    showLoading(false);
-    callback(parsed);
-  })
-  .catch(function(err) {
-    showLoading(false);
-    console.error('마이녹셀 Sheets 로드 실패:', err);
-    callback(null);
-  });
-}
-
-function applyHyper(apiData, dateFrom, dateTo) {
-  if (!apiData) return;
-  var prevRange = getPrevRange(dateFrom, dateTo);
-  var HYPER_BRANDS = ['kitchenaid', 'ecovacs', 'anova'];
-  var HYPER_CHS    = ['nsa', 'nbsa', 'ngfa'];
-  for (var bi = 0; bi < HYPER_BRANDS.length; bi++) {
-    var br = HYPER_BRANDS[bi];
-    if (!RAW[br]) RAW[br] = {};
-    if (!PREV[br]) PREV[br] = {};
-    for (var ci = 0; ci < HYPER_CHS.length; ci++) {
-      var ch = HYPER_CHS[ci];
-      var key = br + '__' + ch;
-      var byDate = apiData[key] || {};
-      RAW[br][ch]  = sumByDateRange(byDate, dateFrom, dateTo);
-      PREV[br][ch] = sumByDateRange(byDate, prevRange.from, prevRange.to);
-    }
-  }
-}
-
-function applyMinoxell(apiData, dateFrom, dateTo) {
-  if (!apiData) return;
-  var prevRange = getPrevRange(dateFrom, dateTo);
-  RAW.minoxell = {
-    meta:   sumByDateRange(apiData.meta,       dateFrom, dateTo),
-    nsa:    sumByDateRange(apiData.nsa,        dateFrom, dateTo),
-    nbsa:   sumByDateRange(apiData.nbsa || {}, dateFrom, dateTo),
-    ngfa:   sumByDateRange(apiData.ngfa,       dateFrom, dateTo)
-  };
-  RAW.oliveyoung = {
-    meta:   RAW.oliveyoung ? RAW.oliveyoung.meta : {cost:0, revenue:0, clicks:0, impressions:0, conversions:0},
-    ngfa:   sumByDateRange(apiData.oliveyoung_ngfa, dateFrom, dateTo)
-  };
-  PREV.minoxell = {
-    meta:   sumByDateRange(apiData.meta,       prevRange.from, prevRange.to),
-    nsa:    sumByDateRange(apiData.nsa,        prevRange.from, prevRange.to),
-    nbsa:   sumByDateRange(apiData.nbsa || {}, prevRange.from, prevRange.to),
-    ngfa:   sumByDateRange(apiData.ngfa,       prevRange.from, prevRange.to)
-  };
-  PREV.oliveyoung = {
-    meta:   PREV.oliveyoung ? PREV.oliveyoung.meta : {cost:0, revenue:0, clicks:0, impressions:0, conversions:0},
-    ngfa:   sumByDateRange(apiData.oliveyoung_ngfa, prevRange.from, prevRange.to)
-  };
-}
-
-function applySkechers(apiData, dateFrom, dateTo) {
-  if (!apiData) return;
-  var built = buildSkechersRaw(apiData, dateFrom, dateTo);
-  RAW.skechers_official = built.skechers_official;
-  RAW.skechers_app      = built.skechers_app;
-  var prev = buildSkechersPrev(apiData, dateFrom, dateTo);
-  PREV.skechers_official = prev.skechers_official;
-  PREV.skechers_app      = prev.skechers_app;
-}
-
 // render 오버라이드: 실제 데이터 브랜드면 API 호출
 function renderWithData() {
   var dateFrom = document.getElementById('dateFrom').value;
@@ -1226,9 +549,6 @@ var PREV = {};
   }
 })();
 
-var HYPER_SUBS     = ['kitchenaid', 'ecovacs', 'anova'];
-var SKECHERS_SUBS  = ['skechers_official', 'skechers_app'];
-var MYNOXCEL_SUBS  = ['minoxell', 'oliveyoung'];
 var ALL_BRANDS = ['aimban'];
 var CHS = ['nsa', 'nbsa', 'ngfa', 'kakao'];
 var CH_NAME  = {nsa: '파워링크', nbsa: '브랜드검색', ngfa: '쇼핑검색', kakao: '파워컨텐츠'};
@@ -1273,44 +593,11 @@ var MULTS = {}; // 더 이상 사용하지 않음
 // 브랜드 × 채널 × 날짜별 1일 데이터 반환
 function getDayData(brKey, chKey, dateStr) {
   var empty = {cost:0, revenue:0, clicks:0, impressions:0, conversions:0};
-  // 아임반 실제 데이터
   if (sheetsCache.aimban) {
     var byDateA = sheetsCache.aimban[chKey];
     if (byDateA && byDateA[dateStr]) return byDateA[dateStr];
     if (byDateA) return empty;
   }
-  // 스케쳐스 실제 데이터
-  if (sheetsCache.skechers) {
-    var p = sheetsCache.skechers;
-    var byDate = null;
-    if (brKey === 'skechers_official' && chKey === 'nsa')    byDate = p.nsa;
-    if (brKey === 'skechers_official' && chKey === 'nbsa')   byDate = p.nbsa;
-    if (brKey === 'skechers_official' && chKey === 'google') byDate = p.googleOfficial;
-    if (brKey === 'skechers_app'      && chKey === 'google') byDate = p.googleApp;
-    if (byDate && byDate[dateStr]) return byDate[dateStr];
-    if (byDate) return empty;
-  }
-  // 마이녹셀 실제 데이터
-  if (sheetsCache.minoxell) {
-    var pm = sheetsCache.minoxell;
-    var byDateM = null;
-    if (brKey === 'minoxell' && chKey === 'nsa')  byDateM = pm.nsa;
-    if (brKey === 'minoxell' && chKey === 'nbsa') byDateM = pm.nbsa;
-    if (brKey === 'minoxell' && chKey === 'meta') byDateM = pm.meta;
-    if (brKey === 'minoxell' && chKey === 'ngfa') byDateM = pm.ngfa;
-    if (brKey === 'oliveyoung' && chKey === 'ngfa') byDateM = pm.oliveyoung_ngfa;
-    if (byDateM && byDateM[dateStr]) return byDateM[dateStr];
-    if (byDateM) return empty;
-  }
-  // 하이퍼 실제 데이터
-  if (sheetsCache.hyper) {
-    var key = brKey + '__' + chKey;
-    var byDateH = sheetsCache.hyper[key];
-    if (byDateH && byDateH[dateStr]) return byDateH[dateStr];
-    if (byDateH) return empty;
-  }
-  // 샘플 데이터 브랜드: RAW 합산값을 날짜 수로 나눠서 근사
-  if (RAW[brKey] && RAW[brKey][chKey]) return empty; // 샘플은 일별 없음
   return empty;
 }
 
@@ -1909,23 +1196,9 @@ function toggleCol(key) {
 }
 
 // 브랜드별 컬럼/레이블 오버라이드
-var BRAND_OVERRIDES = {
-  careerbud: {
-    excludeCols: ['revenue', 'roas'],
-    labelOverrides: {conversions: '회원가입', cpa: 'CPA', cvr: 'CVR'},
-    kpiOrder: ['cost', 'conversions', 'cvr', 'cpa', 'clicks', 'ctr', 'cpc', 'impressions', 'cpm']
-  },
-  skechers_app: {
-    keyOverrides:  {conversions: 'app_installs', cpa: 'cpi', cvr: 'install_rate'},
-    labelOverrides: {conversions: '앱설치수', cpa: 'CPI', cvr: '설치율'}
-  }
-};
+var BRAND_OVERRIDES = {};
 
-function getActiveBrand() {
-  if (S.brand === 'careerbud') return 'careerbud';
-  if (S.brand === 'skechers' && S.sub === 'skechers_app') return 'skechers_app';
-  return null;
-}
+function getActiveBrand() { return null; }
 
 function getEffectiveCols() {
   var brand = getActiveBrand();
@@ -2141,7 +1414,6 @@ function renderCampaignTable() {
   // 네이버 SA/DA 전용 추가 컬럼
   var NAVER_CHS = ['nsa', 'nbsa', 'ngfa'];
   var isNaverOnly = activeChs.length > 0 && activeChs.every(function(ch){ return NAVER_CHS.indexOf(ch) !== -1; });
-  var isSkechersApp = S.brand === 'skechers' && S.sub === 'skechers_app';
   var EXTRA_COLS = isNaverOnly ? [
     {key:'conversions', label:'구매완료수',  type:'num'},
     {key:'cart_conv',   label:'장바구니수',  type:'num'},
@@ -2150,10 +1422,6 @@ function renderCampaignTable() {
     {key:'total_conv',  label:'총전환수',    type:'num'},
     {key:'total_rev',   label:'총매출',      type:'won'},
     {key:'total_cpa',   label:'총CPA',       type:'cpc'}
-  ] : isSkechersApp ? [
-    {key:'app_installs', label:'앱설치수', type:'num'},
-    {key:'cpi',          label:'CPI',      type:'cpc'},
-    {key:'install_rate', label:'설치율',   type:'pct'}
   ] : [];
 
   // 헤더
@@ -2493,7 +1761,7 @@ function loadComment() {
   var box = document.getElementById('commentBox');
   var title = document.getElementById('commentTitle');
   if (!box) return;
-  var brandLabel = {'all':'전체','skechers':'스케쳐스','minoxell':'마이녹셀','careerbud':'커리어벗','hyper':'하이퍼'}[S.brand] || S.brand;
+  var brandLabel = '아임반';
   var dateFrom = document.getElementById('dateFrom').value;
   var dateTo   = document.getElementById('dateTo').value;
   title.textContent = brandLabel + ' 코멘트 (' + dateFrom.replace(/-/g,'.') + ' — ' + dateTo.replace(/-/g,'.') + ')';
@@ -2538,7 +1806,7 @@ function generateComment() {
     var arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '→';
     return fmt(v, type) + ' (' + arrow + fmt(Math.abs(diff), type) + ')';
   }
-  var brandLabel = {'all':'전체','skechers':'스케쳐스','minoxell':'마이녹셀','careerbud':'커리어벗','hyper':'하이퍼'}[S.brand] || S.brand;
+  var brandLabel = '아임반';
   var dateFrom = document.getElementById('dateFrom').value;
   var dateTo   = document.getElementById('dateTo').value;
 
@@ -2591,28 +1859,7 @@ function render() {
   renderCampaignTable();
 }
 
-function setBrand(btn) {
-  var tabs = document.querySelectorAll('#brandTabs .tab');
-  for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
-  btn.classList.add('active');
-  S.brand = btn.getAttribute('data-brand');
-  S.sub = 'all';
-  // 브랜드 subbrand row 없음 (aimban 전용)
-  var stabs = document.querySelectorAll('.sub-tab');
-  for (var i = 0; i < stabs.length; i++) stabs[i].classList.toggle('active', stabs[i].getAttribute('data-sub') === 'all');
-  tableSort = {key: null, asc: true};
-  buildColDropdown();
-  renderWithData();
-}
-
-function setSub(btn, brand) {
-  var rowId = brand === 'skechers' ? 'subRowSkechers' : brand === 'minoxell' ? 'subRowMynoxcel' : 'subRowHyper';
-  var stabs = document.querySelectorAll('#' + rowId + ' .sub-tab');
-  for (var i = 0; i < stabs.length; i++) stabs[i].classList.remove('active');
-  btn.classList.add('active');
-  S.sub = btn.getAttribute('data-sub');
-  renderWithData();
-}
+function setBrand(btn) { renderWithData(); }
 
 function setCh(btn) {
   var clicked = btn.getAttribute('data-ch');
@@ -2660,7 +1907,7 @@ function setThisMonth(btn) {
   document.getElementById('dateTo').value   = to;
   updateLabel();
   saveDateRange();
-  sheetsCache.skechers = null; sheetsCache.minoxell = null; sheetsCache.hyper = null; campaignCache = {};
+  sheetsCache.aimban = null; campaignCache = {};
   renderWithData();
 }
 
@@ -2680,7 +1927,7 @@ function setLastMonth(btn) {
   document.getElementById('dateTo').value   = lastY + '-' + pad(lastM + 1) + '-' + pad(lastDay);
   updateLabel();
   saveDateRange();
-  sheetsCache.skechers = null; sheetsCache.minoxell = null; sheetsCache.hyper = null; campaignCache = {};
+  sheetsCache.aimban = null; campaignCache = {};
   renderWithData();
 }
 
@@ -2725,7 +1972,7 @@ function setLastWeek(btn) {
   document.getElementById('dateTo').value   = lastSunday.toISOString().slice(0, 10);
   updateLabel();
   saveDateRange();
-  sheetsCache.skechers = null; sheetsCache.minoxell = null; sheetsCache.hyper = null; campaignCache = {};
+  sheetsCache.aimban = null; campaignCache = {};
   renderWithData();
 }
 
@@ -2740,7 +1987,7 @@ function setYesterday(btn) {
   document.getElementById('dateTo').value   = d;
   updateLabel();
   saveDateRange();
-  sheetsCache.skechers = null; sheetsCache.minoxell = null; sheetsCache.hyper = null; campaignCache = {};
+  sheetsCache.aimban = null; campaignCache = {};
   renderWithData();
 }
 
@@ -2762,7 +2009,7 @@ function setTwoWeeksAgo(btn) {
   document.getElementById('dateTo').value   = twoSunday.toISOString().slice(0, 10);
   updateLabel();
   saveDateRange();
-  sheetsCache.skechers = null; sheetsCache.minoxell = null; sheetsCache.hyper = null; campaignCache = {};
+  sheetsCache.aimban = null; campaignCache = {};
   renderWithData();
 }
 
@@ -2778,7 +2025,7 @@ function setPreset(btn, days) {
   document.getElementById('dateTo').value   = yesterday.toISOString().slice(0, 10);
   updateLabel();
   saveDateRange();
-  sheetsCache.skechers = null; sheetsCache.minoxell = null; sheetsCache.hyper = null; campaignCache = {};
+  sheetsCache.aimban = null; campaignCache = {};
   renderWithData();
 }
 
@@ -2787,7 +2034,7 @@ function applyRange() {
   for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
   updateLabel();
   saveDateRange();
-  sheetsCache.skechers = null; sheetsCache.minoxell = null; sheetsCache.hyper = null; campaignCache = {}; // 날짜 바뀌면 캐시 초기화
+  sheetsCache.aimban = null; campaignCache = {}; // 날짜 바뀌면 캐시 초기화
   renderWithData();
 }
 
@@ -2798,496 +2045,19 @@ function updateLabel() {
 }
 
 // ── 예산 현황 (단일 시트, 월별 컬럼) ─────────────────────────────────────────
-var BUDGET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRjLq8cpPkrwvor2C6zNvTTtExwXISiHYfI9IE6rnlhizKK0nYVj6WV3kCCOZolwmImKtKkFClW073s/pub?gid=1313684885&single=true&output=csv';
 
-var budgetCache = {}; // { allData: [...rows], parsed: {ym: {key: budget}} }
-
-// 시트 매체명 → 대시보드 채널키 매핑
-var BUDGET_CH_MAP = {
-  'N.BSA': 'nbsa', 'N.SA': 'nsa', 'N.GFA': 'ngfa',
-  'Meta': 'meta', 'Google': 'google', 'Kakao': 'kakao'
-};
-
-// 시트 브랜드/세부 → 대시보드 브랜드키 매핑
-// brand, sub, ch → storageKey (brand__ch 또는 특수키)
-var BUDGET_BRAND_MAP = [
-  {brand:'마이녹셀',  sub:'',          ch:'N.BSA', key:'minoxell__nbsa'},
-  {brand:'마이녹셀',  sub:'',          ch:'N.SA',  key:'minoxell__nsa'},
-  {brand:'마이녹셀',  sub:'',          ch:'N.GFA', key:'minoxell__ngfa'},
-  {brand:'마이녹셀',  sub:'',          ch:'Meta',  key:'minoxell__meta'},
-  {brand:'마이녹셀',  sub:'올리브영',  ch:'Meta',  key:'oliveyoung__meta'},
-  {brand:'마이녹셀',  sub:'올리브영',  ch:'N.GFA', key:'oliveyoung__ngfa'},
-  {brand:'하이퍼',    sub:'키친에이드',ch:'N.BSA', key:'kitchenaid__nbsa'},
-  {brand:'하이퍼',    sub:'키친에이드',ch:'N.SA',  key:'kitchenaid__nsa'},
-  {brand:'하이퍼',    sub:'키친에이드(코드리스)',ch:'N.SA', key:'kitchenaid_codeless__nsa'},
-  {brand:'하이퍼',    sub:'키친에이드',ch:'N.GFA', key:'kitchenaid__ngfa'},
-  {brand:'하이퍼',    sub:'에코백스',  ch:'N.SA',  key:'ecovacs__nsa'},
-  {brand:'하이퍼',    sub:'에코백스',  ch:'N.GFA', key:'ecovacs__ngfa'},
-  {brand:'하이퍼',    sub:'아노바',    ch:'N.SA',  key:'anova__nsa'},
-  {brand:'하이퍼',    sub:'아노바',    ch:'N.GFA', key:'anova__ngfa'},
-  {brand:'스케쳐스',  sub:'공식몰',    ch:'N.SA',  key:'skechers_official__nsa'},
-  {brand:'스케쳐스',  sub:'앱',        ch:'Kakao', key:'skechers_app__kakao'},
-  {brand:'스케쳐스',  sub:'공식몰',    ch:'Google',key:'skechers_official__google'},
-  {brand:'스케쳐스',  sub:'앱',        ch:'Google',key:'skechers_app__google'},
-  {brand:'커리어벗',  sub:'',          ch:'N.BSA', key:'careerbud__nbsa'},
-  {brand:'커리어벗',  sub:'',          ch:'Google',key:'careerbud__google'},
-  {brand:'커리어벗',  sub:'',          ch:'Meta',  key:'careerbud__meta'}
-];
-
-// 예산 기간 상태
-var budgetPeriod = {year: '2026', month: '03'};
-
-function buildBudgetPeriodSelector() {
-  // 연도: 하드코딩 or 동적
-  var years = ['2026', '2027'];
-  var monthNames = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-
-  var yearSel = document.getElementById('budgetYearSelect');
-  yearSel.innerHTML = years.map(function(y) {
-    return '<option value="' + y + '"' + (y===budgetPeriod.year?' selected':'') + '>' + y + '년</option>';
-  }).join('');
-
-  var monthSel = document.getElementById('budgetMonthSelect');
-  monthSel.innerHTML = monthNames.map(function(label, idx) {
-    var m = String(idx+1).padStart(2,'0');
-    return '<option value="' + m + '"' + (m===budgetPeriod.month?' selected':'') + '>' + label + '</option>';
-  }).join('');
-}
-
-function setBudgetYear(y) {
-  budgetPeriod.year = y;
-  buildBudgetPeriodSelector();
-  renderBudgetSection();
-}
-
-function setBudgetMonth(m) {
-  budgetPeriod.month = m;
-  renderBudgetSection();
-}
-
-// 날짜 범위의 일수
-function rangeDays() {
-  var f = new Date(document.getElementById('dateFrom').value);
-  var t = new Date(document.getElementById('dateTo').value);
-  return Math.max(1, Math.round((t - f) / 86400000) + 1);
-}
-// 해당 월의 총 일수
-function monthDays(dateStr) {
-  var d = new Date(dateStr);
-  return new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-}
-function getYearMonth(dateStr) {
-  return dateStr ? dateStr.slice(0, 7) : '';
-}
-
-// CSV 한 줄 파싱
-function splitCSVLine(line) {
-  var cols = [], cur = '', inQuote = false;
-  for (var i = 0; i < line.length; i++) {
-    var ch = line[i];
-    if (ch === '"') { inQuote = !inQuote; }
-    else if (ch === ',' && !inQuote) { cols.push(cur.trim()); cur = ''; }
-    else { cur += ch; }
-  }
-  cols.push(cur.trim());
-  return cols;
-}
-
-function parseBudgetNum(str) {
-  var clean = (str || '').replace(/₩/g,'').replace(/\s/g,'').replace(/,/g,'').replace(/[^0-9.]/g,'');
-  return Number(clean) || 0;
-}
 
 // 새 시트 파싱: 헤더에서 월 컬럼 인덱스 찾아서 { storageKey: 월예산 } 반환
-function parseBudgetSheet(text, targetMonth) {
-  // targetMonth: '03' 형태
-  var cleaned = '';
-  var inQ = false;
-  for (var ci = 0; ci < text.length; ci++) {
-    var c = text[ci];
-    if (c === '"') { inQ = !inQ; cleaned += c; }
-    else if ((c === '\n' || c === '\r') && inQ) { cleaned += ' '; }
-    else { cleaned += c; }
-  }
 
-  var lines = cleaned.trim().split('\n');
-  if (lines.length < 2) return {};
 
-  var headers = splitCSVLine(lines[0]);
-  // 헤더: 브랜드,세부,매체,연간,12월,1월,2월,...
-  // 월 컬럼 찾기: "1월"~"12월"
-  var monthNames = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-  var targetLabel = monthNames[parseInt(targetMonth,10)-1];
 
-  // 헤더에 같은 월 이름이 여러 번 나올 수 있으므로 마지막 인덱스 사용 (현재 연도)
-  var monthIdx = -1;
-  for (var h = 0; h < headers.length; h++) {
-    if (headers[h].trim() === targetLabel) monthIdx = h;
-  }
-  if (monthIdx < 0) { console.warn('월 컬럼 못 찾음:', targetLabel, headers); return {}; }
 
-  var out = {};
-  var lastBrand = '', lastSub = '';
 
-  for (var i = 1; i < lines.length; i++) {
-    var cols = splitCSVLine(lines[i]);
-    var rawBrand = (cols[0] || '').trim();
-    var rawSub   = (cols[1] || '').trim();
-    var rawCh    = (cols[2] || '').trim();
 
-    if (rawBrand) lastBrand = rawBrand;
-    if (rawSub)   lastSub   = rawSub;
-    else if (rawBrand) lastSub = ''; // 브랜드 바뀌면 세부 초기화
 
-    var budget = parseBudgetNum(cols[monthIdx] || '');
-    if (!budget || !lastBrand || !rawCh) continue;
-
-    // BUDGET_BRAND_MAP에서 매칭
-    for (var m = 0; m < BUDGET_BRAND_MAP.length; m++) {
-      var rule = BUDGET_BRAND_MAP[m];
-      if (rule.brand === lastBrand && rule.sub === lastSub && rule.ch === rawCh) {
-        out[rule.key] = (out[rule.key] || 0) + budget;
-        break;
-      }
-    }
-  }
-  return out;
-}
-
-function loadBudgetForMonth(ym, callback) {
-  // 전체 시트를 한 번만 로드하고 캐시
-  if (budgetCache.raw) {
-    var parsed = parseBudgetSheet(budgetCache.raw, ym.slice(5,7));
-    callback(parsed);
-    return;
-  }
-  fetch(BUDGET_URL)
-    .then(function(r){ return r.text(); })
-    .then(function(text){
-      budgetCache.raw = text;
-      var parsed = parseBudgetSheet(text, ym.slice(5,7));
-      callback(parsed);
-    })
-    .catch(function(){ callback({}); });
-}
-
-function renderBudgetSection() {
-  if (!budgetSectionOpen) return; // 닫혀있으면 스킵
-  var ym = budgetPeriod.year + '-' + budgetPeriod.month;
-  var barsEl = document.getElementById('budgetBars');
-  barsEl.innerHTML = '<div style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--muted)">예산 불러오는 중...</div>';
-
-  // 스케쳐스 시트 데이터가 없으면 먼저 로드
-  function doRender() {
-    loadBudgetForMonth(ym, function(budgets) {
-      _renderBudgetBars(ym, budgets);
-    });
-  }
-
-  if (!sheetsCache.skechers || !sheetsCache.minoxell || !sheetsCache.hyper) {
-    var pending = 0;
-    function checkDone() { pending--; if (pending === 0) doRender(); }
-    if (!sheetsCache.skechers) { pending++; loadSkechers(function(){ checkDone(); }); }
-    if (!sheetsCache.minoxell) { pending++; loadMinoxell(function(){ checkDone(); }); }
-    if (!sheetsCache.hyper)    { pending++; loadHyper(function(){ checkDone(); }); }
-  } else {
-    doRender();
-  }
-}
-
-function _renderBudgetBars(ym, budgets) {
-  var barsEl = document.getElementById('budgetBars');
-    var bk = brandKeys();
-    var ck = chKeys();
-    // 예산은 월 전체 기준 (일할 계산 없이 월 예산 그대로 표시)
-    var mDays = monthDays(ym + '-01');
-
-    // 브랜드 > 하위 > 매체 계층 구조 정의 (매체 순서: meta → nsa → ngfa → google)
-    var BUDGET_STRUCTURE = [
-      { brand:'스케쳐스', subs:[
-        { label:'공식몰', key:'skechers_official', chs:['nsa','google'] },
-        { label:'앱',     key:'skechers_app',      chs:['kakao','google'] }
-      ]},
-      { brand:'마이녹셀', subs:[
-        { label:'마이녹셀', key:'minoxell',    chs:['meta','nbsa','nsa','ngfa'] },
-        { label:'올리브영', key:'oliveyoung',  chs:['meta','ngfa'] }
-      ]},
-      { brand:'커리어벗', subs:[
-        { label:'', key:'careerbud', chs:['meta','nbsa','google'] }
-      ]},
-      { brand:'하이퍼', subs:[
-        { label:'키친에이드',       key:'kitchenaid',         chs:['nbsa','nsa','ngfa'] },
-        { label:'키친에이드<br><span style="font-size:9px;opacity:.7">코드리스</span>', key:'kitchenaid_codeless', chs:['nsa'] },
-        { label:'에코백스',         key:'ecovacs',            chs:['nsa','ngfa'] },
-        { label:'아노바',           key:'anova',              chs:['nsa','ngfa'] }
-      ]}
-    ];
-
-    var CH_LABEL_MAP = {meta:'Meta', nsa:'N.SA', ngfa:'N.GFA', google:'Google', kakao:'Kakao', nbsa:'N.BSA'};
-
-    var rows = [];
-    // 예산 달의 1일~말일
-    var mDays2 = monthDays(ym + '-01');
-    var budgetDateFrom = ym + '-01';
-    var budgetDateTo   = ym + '-' + (mDays2 < 10 ? '0' + mDays2 : '' + mDays2);
-
-    // 브랜드 × 매체별 수수료율 (예산 현황 전용)
-    // 마이녹셀 메타 수수료: 2026년 3월부터 18.3%, 1~2월은 15%
-    var minoxellMetaFee = 0.183;
-    if (budgetPeriod.year === '2026' && parseInt(budgetPeriod.month, 10) <= 2) {
-      minoxellMetaFee = 0.15;
-    }
-
-    var FEE_RATES = {
-      'skechers_official__google': 0.15,
-      'skechers_app__google':      0.15,
-      'minoxell__meta':            minoxellMetaFee,
-      'careerbud__google':         0.183,
-      'careerbud__meta':           0.183
-    };
-
-    for (var si = 0; si < BUDGET_STRUCTURE.length; si++) {
-      var brandGroup = BUDGET_STRUCTURE[si];
-      for (var sj = 0; sj < brandGroup.subs.length; sj++) {
-        var sub = brandGroup.subs[sj];
-        for (var sk = 0; sk < sub.chs.length; sk++) {
-          var chKey = sub.chs[sk];
-          var storageKey  = sub.key + '__' + chKey;
-          var monthBudget = budgets[storageKey] || 0;
-          if (!monthBudget) continue;
-
-          var spent = 0;
-          var parsed = sheetsCache.skechers;
-
-          if (parsed && sub.key === 'skechers_official') {
-            var byDateMap = chKey === 'nsa' ? parsed.nsa : chKey === 'nbsa' ? (parsed.nbsa || {}) : parsed.googleOfficial;
-            spent = sumByDateRange(byDateMap || {}, budgetDateFrom, budgetDateTo).cost || 0;
-          } else if (parsed && sub.key === 'skechers_app') {
-            var byDateMap2 = chKey === 'google' ? parsed.googleApp : {};
-            spent = sumByDateRange(byDateMap2 || {}, budgetDateFrom, budgetDateTo).cost || 0;
-          } else if (sheetsCache.minoxell && (sub.key === 'minoxell' || sub.key === 'oliveyoung')) {
-            var pm2 = sheetsCache.minoxell;
-            var byDateMap3 = null;
-            if (sub.key === 'minoxell'   && chKey === 'nsa')  byDateMap3 = pm2.nsa;
-            if (sub.key === 'minoxell'   && chKey === 'nbsa') byDateMap3 = pm2.nbsa;
-            if (sub.key === 'minoxell'   && chKey === 'meta') byDateMap3 = pm2.meta;
-            if (sub.key === 'minoxell'   && chKey === 'ngfa') byDateMap3 = pm2.ngfa;
-            if (sub.key === 'oliveyoung' && chKey === 'ngfa') byDateMap3 = pm2.oliveyoung_ngfa;
-            spent = sumByDateRange(byDateMap3 || {}, budgetDateFrom, budgetDateTo).cost || 0;
-          } else if (sheetsCache.hyper) {
-            var hyperKey = sub.key + '__' + chKey;
-            var byDateH2 = sheetsCache.hyper[hyperKey] || {};
-            spent = sumByDateRange(byDateH2, budgetDateFrom, budgetDateTo).cost || 0;
-          } else {
-            var chData = sumData([sub.key], [chKey], RAW);
-            spent = aggCalc(chData).cost || 0;
-          }
-
-          var feeRate = FEE_RATES[storageKey] || 0;
-          if (feeRate > 0) spent = Math.round(spent * (1 + feeRate));
-
-          rows.push({
-            brand:       brandGroup.brand,
-            sub:         sub.label,
-            ch:          CH_LABEL_MAP[chKey] || chKey,
-            storageKey:  storageKey,
-            monthBudget: monthBudget,
-            spent:       spent
-          });
-        }
-      }
-    }
-
-    if (rows.length === 0) {
-      barsEl.innerHTML = '<div style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--muted);padding:4px 0">' + ym + ' 예산 데이터가 없어요</div>';
-      return;
-    }
-
-    // 전일까지 일수 계산
-    var today = new Date();
-    var budgetYear  = parseInt(budgetPeriod.year, 10);
-    var budgetMonth = parseInt(budgetPeriod.month, 10);
-    var totalDays   = new Date(budgetYear, budgetMonth, 0).getDate();
-    // 전일 = 오늘-1, 단 해당 월 기준
-    var yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1);
-    var elapsedDays;
-    if (yesterday.getFullYear() === budgetYear && yesterday.getMonth()+1 === budgetMonth) {
-      elapsedDays = yesterday.getDate();
-    } else if (yesterday > new Date(budgetYear, budgetMonth, 0)) {
-      elapsedDays = totalDays; // 해당 월이 지난 경우 전체
-    } else {
-      elapsedDays = 0;
-    }
-    var remainDays = totalDays - elapsedDays;
-
-    var heads = ['브랜드','하위','매체','예산','소진액','소진 계획(전일)','소진율','잔액','소진 목표액(일)','소진 목표액<br>(일, 수수료 제외)'];
-    var html = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-family:\'DM Mono\',monospace;font-size:11px">';
-
-    // 헤더
-    html += '<tr>';
-    for (var h = 0; h < heads.length; h++) {
-      html += '<th style="padding:10px 16px;text-align:' + (h < 3 ? 'left' : 'right') + ';color:var(--muted);font-weight:400;border-bottom:1px solid var(--border2);white-space:nowrap;line-height:1.4">' + heads[h] + '</th>';
-    }
-    html += '</tr>';
-
-    // 행 렌더링 - 브랜드별 소계 포함
-    var lastBrandLabel = '';
-    var lastSubLabel   = '';
-    var brandTotals = {}; // { brand: { budget, spent, plan } }
-
-    // 브랜드별 합산 미리 계산 + 마이녹셀은 하위별 합산도
-    var brandTotals = {};
-    var subTotals   = {}; // 'brand__sub' → {budget, spent, plan}
-
-    for (var i = 0; i < rows.length; i++) {
-      var r = rows[i];
-      var plan0 = totalDays > 0 ? Math.round(r.monthBudget / totalDays * elapsedDays) : 0;
-      if (!brandTotals[r.brand]) brandTotals[r.brand] = {budget:0, spent:0, plan:0};
-      brandTotals[r.brand].budget += r.monthBudget;
-      brandTotals[r.brand].spent  += r.spent;
-      brandTotals[r.brand].plan   += plan0;
-      var subKey = r.brand + '__' + r.sub;
-      if (!subTotals[subKey]) subTotals[subKey] = {label:r.sub, budget:0, spent:0, plan:0};
-      subTotals[subKey].budget += r.monthBudget;
-      subTotals[subKey].spent  += r.spent;
-      subTotals[subKey].plan   += plan0;
-    }
-
-    // 하위 소계가 필요한 브랜드 (하위가 2개 이상)
-    var BRANDS_WITH_SUBTOTALS = ['마이녹셀'];
-
-    function renderSubtotalRow(brand, label, totals, isSubRow) {
-      var t = totals;
-      if (!t) return '';
-      var pct  = t.budget > 0 ? t.spent / t.budget * 100 : 0;
-      var rem  = t.budget - t.spent;
-      var fc   = pct >= 100 ? '#ef4444' : pct >= 80 ? '#f97316' : '#22c55e';
-      var fw   = Math.min(pct, 100).toFixed(1);
-      var sc   = 'var(--text)';
-      if (t.plan > 0) {
-        var dp = (t.spent - t.plan) / t.plan * 100;
-        if (dp >= 5) sc = 'var(--down)'; else if (dp <= -5) sc = 'var(--google)';
-      }
-      var dg  = remainDays > 0 ? Math.round(rem / remainDays) : 0;
-      var bg  = isSubRow ? 'rgba(99,126,219,0.07)' : 'rgba(59,95,199,0.13)';
-      var borderTop = isSubRow ? '1px solid rgba(99,126,219,0.2)' : '2px solid rgba(59,95,199,0.25)';
-      var row = '<tr style="border-top:' + borderTop + ';background:' + bg + '">';
-      if (isSubRow) {
-        row += '<td style="padding:8px 16px"></td>';
-        row += '<td style="padding:8px 16px;color:var(--text);font-weight:500;white-space:nowrap">' + label + '</td>';
-        row += '<td style="padding:8px 16px;color:var(--muted);font-size:10px">소계</td>';
-      } else {
-        row += '<td style="padding:9px 16px;color:var(--text);font-weight:600;white-space:nowrap">' + brand + '</td>';
-        row += '<td style="padding:9px 16px;color:var(--muted);font-size:10px">소계</td>';
-        row += '<td style="padding:9px 16px"></td>';
-      }
-      row += '<td style="padding:9px 16px;text-align:right;font-weight:500">₩' + t.budget.toLocaleString('ko-KR') + '</td>';
-      row += '<td style="padding:9px 16px;text-align:right;color:' + sc + ';font-weight:500">₩' + Math.round(t.spent).toLocaleString('ko-KR') + '</td>';
-      row += '<td style="padding:9px 16px;text-align:right;color:var(--text);opacity:.75">₩' + t.plan.toLocaleString('ko-KR') + '</td>';
-      row += '<td style="padding:5px 16px;text-align:right;min-width:90px"><div style="position:relative;height:22px;border-radius:4px;overflow:hidden;background:var(--bg3);min-width:80px"><div style="position:absolute;left:0;top:0;height:100%;width:' + fw + '%;background:' + fc + ';opacity:.3;border-radius:4px"></div><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;font-weight:600;color:' + fc + '">' + pct.toFixed(1) + '%</div></div></td>';
-      row += '<td style="padding:9px 16px;text-align:right;color:' + (rem < 0 ? 'var(--down)' : 'var(--text)') + ';font-weight:500">₩' + Math.round(rem).toLocaleString('ko-KR') + '</td>';
-      row += '<td style="padding:9px 16px;text-align:right;color:' + (dg < 0 ? 'var(--down)' : 'var(--text)') + ';font-weight:500">' + (remainDays > 0 ? '₩' + dg.toLocaleString('ko-KR') : '-') + '</td>';
-      row += '<td style="padding:9px 16px"></td>';
-      row += '</tr>';
-      return row;
-    }
-
-    for (var i = 0; i < rows.length; i++) {
-      var r = rows[i];
-      var budget    = r.monthBudget;
-      var spent2    = r.spent;
-      var plan      = totalDays > 0 ? Math.round(budget / totalDays * elapsedDays) : 0;
-      var pctVal    = budget > 0 ? spent2 / budget * 100 : 0;
-      var remain    = budget - spent2;
-      var dailyGoal = remainDays > 0 ? Math.round(remain / remainDays) : 0;
-
-      var fillColor = pctVal >= 100 ? '#ef4444' : pctVal >= 80 ? '#f97316' : '#22c55e';
-      var fillWidth = Math.min(pctVal, 100).toFixed(1);
-
-      var spentColor = 'var(--text)';
-      if (plan > 0) {
-        var diffPct = (spent2 - plan) / plan * 100;
-        if (diffPct >= 5)       spentColor = 'var(--down)';
-        else if (diffPct <= -5) spentColor = 'var(--google)';
-      }
-
-      // 브랜드 또는 하위 바뀌기 전에 소계 삽입
-      if (lastBrandLabel) {
-        var brandChanged = (r.brand !== lastBrandLabel);
-        var subChanged   = !brandChanged && (r.sub !== lastSubLabel);
-        var needsSubTotal = BRANDS_WITH_SUBTOTALS.indexOf(lastBrandLabel) !== -1;
-
-        if (brandChanged) {
-          // 하위 소계가 필요한 브랜드면 마지막 하위 소계 먼저
-          if (needsSubTotal && lastSubLabel) {
-            html += renderSubtotalRow(lastBrandLabel, lastSubLabel, subTotals[lastBrandLabel + '__' + lastSubLabel], true);
-          }
-          // 브랜드 소계
-          html += renderSubtotalRow(lastBrandLabel, '', brandTotals[lastBrandLabel], false);
-        } else if (subChanged && needsSubTotal) {
-          // 같은 브랜드 내 하위 바뀔 때 하위 소계
-          html += renderSubtotalRow(lastBrandLabel, lastSubLabel, subTotals[lastBrandLabel + '__' + lastSubLabel], true);
-        }
-      }
-
-      var showBrand = (r.brand !== lastBrandLabel);
-      var showSub   = (r.brand + '__' + r.sub !== lastBrandLabel + '__' + lastSubLabel);
-      lastBrandLabel = r.brand;
-      lastSubLabel   = r.sub;
-
-      html += '<tr style="border-bottom:1px solid var(--border)">';
-      html += '<td style="padding:11px 16px;color:var(--text);white-space:nowrap;font-weight:' + (showBrand ? '500' : '400') + '">' + (showBrand ? r.brand : '') + '</td>';
-      html += '<td style="padding:11px 16px;color:var(--text);opacity:.75;line-height:1.4">' + (showSub ? r.sub : '') + '</td>';
-      html += '<td style="padding:11px 16px;color:var(--text);opacity:.7;white-space:nowrap">' + r.ch + '</td>';
-      html += '<td style="padding:11px 16px;text-align:right;color:var(--text)">₩' + budget.toLocaleString('ko-KR') + '</td>';
-      html += '<td style="padding:11px 16px;text-align:right;color:' + spentColor + ';font-weight:500">₩' + Math.round(spent2).toLocaleString('ko-KR') + '</td>';
-      html += '<td style="padding:11px 16px;text-align:right;color:var(--text);opacity:.75">₩' + plan.toLocaleString('ko-KR') + '</td>';
-      html += '<td style="padding:7px 16px;text-align:right;min-width:90px">';
-      html += '<div style="position:relative;height:22px;border-radius:4px;overflow:hidden;background:var(--bg3);min-width:80px">';
-      html += '<div style="position:absolute;left:0;top:0;height:100%;width:' + fillWidth + '%;background:' + fillColor + ';opacity:.25;border-radius:4px"></div>';
-      html += '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;font-weight:500;color:' + fillColor + '">' + pctVal.toFixed(1) + '%</div>';
-      html += '</div></td>';
-      html += '<td style="padding:11px 16px;text-align:right;color:' + (remain < 0 ? 'var(--down)' : 'var(--text)') + '">₩' + Math.round(remain).toLocaleString('ko-KR') + '</td>';
-      html += '<td style="padding:11px 16px;text-align:right;color:' + (dailyGoal < 0 ? 'var(--down)' : 'var(--text)') + '">' + (remainDays > 0 ? '₩' + dailyGoal.toLocaleString('ko-KR') : '-') + '</td>';
-
-      // 수수료 제외 소진 목표액(일)
-      var netDailyGoal = dailyGoal;
-      var feeR = FEE_RATES[r.storageKey] || 0;
-      if (feeR > 0) netDailyGoal = Math.round(dailyGoal / (1 + feeR));
-      html += '<td style="padding:11px 16px;text-align:right;color:' + (netDailyGoal < 0 ? 'var(--down)' : 'var(--muted)') + '">' + (remainDays > 0 ? '₩' + netDailyGoal.toLocaleString('ko-KR') : '-') + '</td>';
-
-      html += '</tr>';
-    }
-    // 마지막 브랜드 소계
-    if (lastBrandLabel) {
-      if (BRANDS_WITH_SUBTOTALS.indexOf(lastBrandLabel) !== -1 && lastSubLabel) {
-        html += renderSubtotalRow(lastBrandLabel, lastSubLabel, subTotals[lastBrandLabel + '__' + lastSubLabel], true);
-      }
-      html += renderSubtotalRow(lastBrandLabel, '', brandTotals[lastBrandLabel], false);
-    }
-    html += '</table></div>';
-    barsEl.innerHTML = html;
-}
-
-// 예산 소진 현황 토글
-var budgetSectionOpen = false;
-function toggleBudgetSection() {
-  budgetSectionOpen = !budgetSectionOpen;
-  var bars   = document.getElementById('budgetBars');
-  var arrow  = document.getElementById('budgetArrow');
-  bars.style.display = budgetSectionOpen ? 'flex' : 'none';
-  arrow.style.transform = budgetSectionOpen ? 'rotate(0deg)' : 'rotate(-90deg)';
-  if (budgetSectionOpen) renderBudgetSection();
-}
-
-// 예산 입력 버튼 숨기기 (Sheets에서 읽어오므로 불필요)
-function toggleBudgetEdit() {}
-function saveBudget() {}
 
 buildMetricSelector();
 buildColDropdown();
-buildBudgetPeriodSelector();
 restoreDateRange();
 renderWithData();
 </script>
