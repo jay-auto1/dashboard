@@ -231,6 +231,13 @@ tbody td:first-child { text-align: left; font-family: 'Noto Sans KR', sans-serif
   </div>
 </div>
 
+<div class="filter-row" id="productFilterRow">
+  <span class="filter-label">제품</span>
+  <div class="tab-group" id="productTabs">
+    <button class="tab active" data-product="all" onclick="setProduct(this)"><span class="dot" style="background:var(--text);opacity:.25"></span>전체</button>
+  </div>
+</div>
+
 </div><!-- /sticky-filters -->
 
 
@@ -303,6 +310,28 @@ tbody td:first-child { text-align: left; font-family: 'Noto Sans KR', sans-serif
   </div>
 </div>
 
+<div class="table-section" style="margin-top:16px">
+  <div class="table-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+    <span>제품별 데이터</span>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="position:relative">
+        <button class="col-dropdown-btn" id="prodColDropBtn" onclick="toggleProdColDrop()">
+          컬럼 선택 <span id="prodColCount"></span>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="margin-left:4px;vertical-align:middle"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="col-dropdown" id="prodColDropdown" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+  <div style="overflow-x:auto;overflow-y:visible;scrollbar-width:none;-ms-overflow-style:none" id="prodTableWrap">
+    <table id="prodTable" style="width:100%;border-collapse:collapse">
+      <thead><tr id="prodTableHead"></tr></thead>
+      <tbody id="prodTbody"></tbody>
+    </table>
+  </div>
+  <style>#prodTableWrap::-webkit-scrollbar{display:none}</style>
+</div>
+
 </div><!-- /page-wrap -->
 <script>
 var EMPTY = {cost:0, revenue:0, clicks:0, impressions:0, conversions:0, app_installs:0};
@@ -366,7 +395,7 @@ function getCampaignHierarchy(brKey, chKey, dateFrom, dateTo) {
   if (campaignCache[cacheKey]) return campaignCache[cacheKey];
   var result = {};
   if (brKey === 'aimban' && sheetsCache.aimban) {
-    result = aggregateNSAHierarchyAimban(sheetsCache.aimban._rawNSA || [], dateFrom, dateTo, chKey);
+    result = aggregateNSAHierarchyAimban(sheetsCache.aimban._filteredNSA || sheetsCache.aimban._rawNSA || [], dateFrom, dateTo, chKey);
   }
   campaignCache[cacheKey] = result;
   return result;
@@ -386,7 +415,7 @@ function getCampaignData(brKey, chKey, dateFrom, dateTo) {
   if (campaignCache[cacheKey]) return campaignCache[cacheKey];
   var result = {};
   if (brKey === 'aimban' && sheetsCache.aimban) {
-    result = aggregateNSAHierarchyAimban(sheetsCache.aimban._rawNSA || [], dateFrom, dateTo, chKey);
+    result = aggregateNSAHierarchyAimban(sheetsCache.aimban._filteredNSA || sheetsCache.aimban._rawNSA || [], dateFrom, dateTo, chKey);
   }
   campaignCache[cacheKey] = result;
   return result;
@@ -509,6 +538,7 @@ function loadAimban(callback) {
       }
       var parsed = {nsa: byType.nsa, nbsa: byType.nbsa, ngfa: byType.ngfa, kakao: byType.kakao, _rawNSA: rows};
       sheetsCache.aimban = parsed;
+      buildProductTabs(rows);
       showLoading(false);
       callback(parsed);
     })
@@ -523,13 +553,41 @@ function applyAimban(apiData, dateFrom, dateTo) {
   if (!apiData) return;
   var prevRange = getPrevRange(dateFrom, dateTo);
   var CHS_AIMBAN = ['nsa', 'nbsa', 'ngfa', 'kakao'];
+  // 제품 필터 적용
+  var rows = apiData._rawNSA || [];
+  var filteredRows = S.product === 'all' ? rows : rows.filter(function(r){ return (r['제품']||'').trim() === S.product; });
+
+  // 필터된 rows로 byDate 재집계
+  function aggregateByType(frows) {
+    var byType = {nsa:{}, nbsa:{}, ngfa:{}, kakao:{}};
+    for (var i = 0; i < frows.length; i++) {
+      var r = frows[i];
+      var dateStr = (r['일자'] || '').slice(0, 10);
+      if (!dateStr) continue;
+      var tp = r['캠페인유형'] || '';
+      var key = tp === '브랜드검색' ? 'nbsa' : tp === '쇼핑검색' ? 'ngfa' : tp === '파워컨텐츠' ? 'kakao' : 'nsa';
+      if (!byType[key][dateStr]) byType[key][dateStr] = {date:dateStr, cost:0, impressions:0, clicks:0, conversions:0, revenue:0};
+      byType[key][dateStr].cost        += Number(r['총비용(vat-)'])      || 0;
+      byType[key][dateStr].impressions += Number(r['노출수'])             || 0;
+      byType[key][dateStr].clicks      += Number(r['클릭수'])             || 0;
+      byType[key][dateStr].conversions += Number(r['구매완료 전환수'])     || 0;
+      byType[key][dateStr].revenue     += Number(r['구매완료 매출액'])     || 0;
+    }
+    return byType;
+  }
+
+  var byType     = aggregateByType(filteredRows);
+  var filteredData = {nsa: byType.nsa, nbsa: byType.nbsa, ngfa: byType.ngfa, kakao: byType.kakao, _rawNSA: filteredRows};
+
   RAW.aimban  = {};
   PREV.aimban = {};
   for (var i = 0; i < CHS_AIMBAN.length; i++) {
     var ch = CHS_AIMBAN[i];
-    RAW.aimban[ch]  = sumByDateRange(apiData[ch] || {}, dateFrom,         dateTo);
-    PREV.aimban[ch] = sumByDateRange(apiData[ch] || {}, prevRange.from, prevRange.to);
+    RAW.aimban[ch]  = sumByDateRange(filteredData[ch] || {}, dateFrom,       dateTo);
+    PREV.aimban[ch] = sumByDateRange(filteredData[ch] || {}, prevRange.from, prevRange.to);
   }
+  // 캠페인 테이블용 필터된 raw 저장
+  sheetsCache.aimban._filteredNSA = filteredRows;
 }
 
 // ── 코멘트 기능 ────────────────────────────────────────────────────────────────
@@ -598,7 +656,7 @@ function togglePrevWeek() {
   var cm = sumData(bk, ck, RAW);
   renderChart(cm, ck);
 }
-var S = {brand: 'aimban', sub: 'all', ch: ['all']};
+var S = {brand: 'aimban', sub: 'all', ch: ['all'], product: 'all'};
 
 var DAYS = []; // 차트용 날짜 배열 (renderChart에서 동적 생성)
 var MULTS = {}; // 더 이상 사용하지 않음
@@ -1163,6 +1221,7 @@ function toggleCampCol(key) {
   }
   buildCampColDropdown();
   renderCampaignTable();
+  renderProductTable();
 }
 
 function buildColDropdown() {
@@ -1186,6 +1245,7 @@ document.addEventListener('click', function(e) {
   if (!e.target.closest('.table-header')) {
     document.getElementById('colDropdown').style.display = 'none';
     document.getElementById('campColDropdown').style.display = 'none';
+    document.getElementById('prodColDropdown').style.display = 'none';
   }
 });
 
@@ -1874,6 +1934,41 @@ function render() {
 
 function setBrand(btn) { renderWithData(); }
 
+
+function setProduct(btn) {
+  var tabs = document.querySelectorAll('#productTabs .tab');
+  for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
+  btn.classList.add('active');
+  S.product = btn.getAttribute('data-product');
+  campaignCache = {};
+  render();
+}
+
+// 제품 탭 동적 생성
+function buildProductTabs(rows) {
+  var products = {};
+  for (var i = 0; i < rows.length; i++) {
+    var p = (rows[i]['제품'] || '').trim();
+    if (p) products[p] = true;
+  }
+  var sorted = Object.keys(products).sort();
+  var PRODUCT_COLORS = ['#4f8ef7','#1D9E75','#f4a044','#D85A30','#a78bfa','#D4537E','#00b4d8','#639922','#E24B4A','#BA7517'];
+  var html = '<button class="tab active" data-product="all" onclick="setProduct(this)"><span class="dot" style="background:var(--text);opacity:.25"></span>전체</button>';
+  for (var i = 0; i < sorted.length; i++) {
+    var color = PRODUCT_COLORS[i % PRODUCT_COLORS.length];
+    html += '<button class="tab" data-product="' + sorted[i] + '" onclick="setProduct(this)"><span class="dot" style="background:' + color + '"></span>' + sorted[i] + '</button>';
+  }
+  document.getElementById('productTabs').innerHTML = html;
+  // 현재 선택 유지
+  var tabs = document.querySelectorAll('#productTabs .tab');
+  for (var i = 0; i < tabs.length; i++) {
+    if (tabs[i].getAttribute('data-product') === S.product) {
+      tabs[i].classList.add('active');
+    } else {
+      tabs[i].classList.remove('active');
+    }
+  }
+}
 function setCh(btn) {
   var clicked = btn.getAttribute('data-ch');
 
@@ -2068,6 +2163,143 @@ function updateLabel() {
 
 
 
+
+
+// ── 제품별 데이터 테이블 ──────────────────────────────────────────────────────
+var prodSelectedCols = ['cost','revenue','roas','conversions','cpa','clicks','ctr','impressions'];
+var prodTableSort = {key: 'cost', asc: false};
+
+function buildProdColDropdown() {
+  var html = '';
+  for (var i = 0; i < TABLE_COLS.length; i++) {
+    var col = TABLE_COLS[i];
+    var active = prodSelectedCols.indexOf(col.key) !== -1;
+    html += '<div class="col-item ' + (active ? 'col-active' : '') + '" onclick="event.stopPropagation();toggleProdCol('' + col.key + '')">';
+    html += '<div class="col-check"></div>' + col.label + '</div>';
+  }
+  document.getElementById('prodColDropdown').innerHTML = html;
+  document.getElementById('prodColCount').textContent = '(' + prodSelectedCols.length + '/' + TABLE_COLS.length + ')';
+}
+
+function toggleProdColDrop() {
+  var dd = document.getElementById('prodColDropdown');
+  dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+}
+
+function toggleProdCol(key) {
+  var idx = prodSelectedCols.indexOf(key);
+  if (idx !== -1) {
+    if (prodSelectedCols.length <= 1) return;
+    prodSelectedCols.splice(idx, 1);
+  } else {
+    prodSelectedCols.push(key);
+    prodSelectedCols.sort(function(a, b) {
+      return TABLE_COLS.findIndex(function(c){ return c.key === a; }) - TABLE_COLS.findIndex(function(c){ return c.key === b; });
+    });
+  }
+  buildProdColDropdown();
+  renderProductTable();
+}
+
+function sortProdTable(key) {
+  if (prodTableSort.key === key) { prodTableSort.asc = !prodTableSort.asc; }
+  else { prodTableSort.key = key; prodTableSort.asc = false; }
+  renderProductTable();
+}
+
+function renderProductTable() {
+  var rows = sheetsCache.aimban ? (sheetsCache.aimban._filteredNSA || sheetsCache.aimban._rawNSA || []) : [];
+  var dateFrom = document.getElementById('dateFrom').value;
+  var dateTo   = document.getElementById('dateTo').value;
+
+  var PROD_COLS = TABLE_COLS.filter(function(c){ return prodSelectedCols.indexOf(c.key) !== -1; });
+  buildProdColDropdown();
+
+  // 헤더
+  var thBase = 'padding:9px 14px;font-family:'Inter',sans-serif;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border2);background:var(--bg3);white-space:nowrap;cursor:pointer;user-select:none';
+  var headHtml = '<th style="' + thBase + ';text-align:left" onclick="sortProdTable('name')">제품' + sortArrow('name', prodTableSort) + '</th>';
+  for (var i = 0; i < PROD_COLS.length; i++) {
+    headHtml += '<th style="' + thBase + ';text-align:right" onclick="sortProdTable('' + PROD_COLS[i].key + '')">' + PROD_COLS[i].label + sortArrow(PROD_COLS[i].key, prodTableSort) + '</th>';
+  }
+
+  // 네이버SA 추가 컬럼
+  var EXTRA = [
+    {key:'conversions', label:'구매완료수',  type:'num'},
+    {key:'cart_conv',   label:'장바구니수',  type:'num'},
+    {key:'revenue',     label:'구매완료매출', type:'won'},
+    {key:'cart_rev',    label:'장바구니매출', type:'won'},
+    {key:'total_conv',  label:'총전환수',    type:'num'},
+    {key:'total_rev',   label:'총매출',      type:'won'},
+    {key:'total_cpa',   label:'총CPA',       type:'cpc'}
+  ];
+  for (var i = 0; i < EXTRA.length; i++) {
+    headHtml += '<th style="' + thBase + ';text-align:right;border-left:' + (i===0?'1px solid var(--border2)':'none') + '">' + EXTRA[i].label + '</th>';
+  }
+  document.getElementById('prodTableHead').innerHTML = headHtml;
+
+  // 데이터 집계: 제품별
+  var prodMap = {};
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    var dateStr = (r['일자'] || '').slice(0, 10);
+    if (!dateStr || dateStr < dateFrom || dateStr > dateTo) continue;
+    var prod = (r['제품'] || '').trim() || '(미분류)';
+    if (!prodMap[prod]) prodMap[prod] = {name:prod, cost:0, impressions:0, clicks:0, conversions:0, revenue:0, cart_conv:0, cart_rev:0};
+    prodMap[prod].cost        += Number(r['총비용(vat-)'])      || 0;
+    prodMap[prod].impressions += Number(r['노출수'])             || 0;
+    prodMap[prod].clicks      += Number(r['클릭수'])             || 0;
+    prodMap[prod].conversions += Number(r['구매완료 전환수'])     || 0;
+    prodMap[prod].revenue     += Number(r['구매완료 매출액'])     || 0;
+    prodMap[prod].cart_conv   += Number(r['장바구니 전환수'])     || 0;
+    prodMap[prod].cart_rev    += Number(r['장바구니 매출액'])     || 0;
+  }
+
+  var allRows = Object.values(prodMap).filter(function(r){ return r.impressions > 0 || r.conversions > 0; });
+
+  // 정렬
+  allRows.sort(function(a, b) {
+    var da = calcExtended(a), db = calcExtended(b);
+    var av = prodTableSort.key === 'name' ? a.name : (da[prodTableSort.key] || 0);
+    var bv = prodTableSort.key === 'name' ? b.name : (db[prodTableSort.key] || 0);
+    if (av < bv) return prodTableSort.asc ? -1 : 1;
+    if (av > bv) return prodTableSort.asc ? 1 : -1;
+    return 0;
+  });
+
+  if (allRows.length === 0) {
+    document.getElementById('prodTbody').innerHTML = '<tr><td colspan="20" style="padding:20px;text-align:center;color:var(--muted);font-size:12px">데이터가 없어요</td></tr>';
+    return;
+  }
+
+  var html = '';
+  var total = {cost:0, impressions:0, clicks:0, conversions:0, revenue:0, cart_conv:0, cart_rev:0};
+
+  for (var i = 0; i < allRows.length; i++) {
+    var r = allRows[i];
+    var d = calcExtended(r);
+    total.cost += r.cost; total.impressions += r.impressions; total.clicks += r.clicks;
+    total.conversions += r.conversions; total.revenue += r.revenue;
+    total.cart_conv += (r.cart_conv||0); total.cart_rev += (r.cart_rev||0);
+
+    html += '<tr style="border-bottom:1px solid var(--border)">';
+    html += '<td style="padding:10px 14px;font-family:'Noto Sans KR',sans-serif;font-size:12px;color:var(--text);white-space:nowrap;position:sticky;left:0;background:var(--bg2);z-index:1">' + r.name + '</td>';
+    for (var j = 0; j < PROD_COLS.length; j++) html += '<td style="padding:8px 14px;text-align:right;font-family:'Inter',sans-serif;font-size:12px;font-variant-numeric:tabular-nums;color:var(--text)">' + fmt(d[PROD_COLS[j].key], PROD_COLS[j].type) + '</td>';
+    for (var j = 0; j < EXTRA.length; j++) html += '<td style="padding:8px 14px;text-align:right;font-family:'Inter',sans-serif;font-size:12px;font-variant-numeric:tabular-nums;color:var(--text);border-left:' + (j===0?'1px solid var(--border2)':'none') + '">' + fmt(d[EXTRA[j].key], EXTRA[j].type) + '</td>';
+    html += '</tr>';
+  }
+
+  // 합계 행
+  if (allRows.length > 1) {
+    var tc = calcExtended(total);
+    html += '<tr style="border-top:2px solid var(--border2);background:var(--bg3)">';
+    html += '<td style="padding:10px 14px;font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:600">합계</td>';
+    for (var j = 0; j < PROD_COLS.length; j++) html += '<td style="padding:10px 14px;text-align:right;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums">' + fmt(tc[PROD_COLS[j].key], PROD_COLS[j].type) + '</td>';
+    for (var j = 0; j < EXTRA.length; j++) html += '<td style="padding:10px 14px;text-align:right;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;border-left:' + (j===0?'1px solid var(--border2)':'none') + '">' + fmt(tc[EXTRA[j].key], EXTRA[j].type) + '</td>';
+    html += '</tr>';
+  }
+
+  document.getElementById('prodTbody').innerHTML = html;
+}
 
 buildMetricSelector();
 buildColDropdown();
