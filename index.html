@@ -314,6 +314,7 @@ tbody td:first-child { text-align: left; font-family: 'Noto Sans KR', sans-serif
   <div class="table-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
     <span>제품별 데이터</span>
     <div style="display:flex;align-items:center;gap:8px">
+      <button id="prodPrevBtn" class="date-btn" onclick="toggleProdPrev()" style="font-size:11px;padding:4px 12px;border-radius:6px">동기간 비교</button>
       <div style="position:relative">
         <button class="col-dropdown-btn" id="prodColDropBtn" onclick="toggleProdColDrop()">
           컬럼 선택 <span id="prodColCount"></span>
@@ -2170,6 +2171,18 @@ function updateLabel() {
 // ── 제품별 데이터 테이블 ──────────────────────────────────────────────────
 var prodSelectedCols = ['cost','revenue','roas','conversions','cpa','clicks','ctr','impressions'];
 var prodTableSort = {key: 'cost', asc: false};
+var prodPrevMode = false;
+
+function toggleProdPrev() {
+  prodPrevMode = !prodPrevMode;
+  var btn = document.getElementById('prodPrevBtn');
+  if (btn) {
+    btn.style.background  = prodPrevMode ? 'var(--text)' : 'transparent';
+    btn.style.color       = prodPrevMode ? 'var(--bg)'   : 'var(--muted)';
+    btn.style.borderColor = prodPrevMode ? 'var(--text)' : 'var(--border2)';
+  }
+  renderProductTable();
+}
 
 function buildProdColDropdown() {
   var html = '';
@@ -2277,7 +2290,7 @@ function renderProductTable() {
     total.cost += r.cost; total.impressions += r.impressions; total.clicks += r.clicks;
     total.conversions += r.conversions; total.revenue += r.revenue;
     total.cart_conv += (r.cart_conv||0); total.cart_rev += (r.cart_rev||0);
-    html += '<tr style="border-bottom:1px solid var(--border)">';
+    html += '<tr style="border-bottom:' + (prodPrevMode ? 'none' : '1px solid var(--border)') + '">';
     html += '<td style="padding:10px 14px;font-size:12px;color:var(--text);white-space:nowrap;position:sticky;left:0;background:var(--bg2);z-index:1">' + r.name + '</td>';
     for (var j = 0; j < PROD_COLS.length; j++) {
       html += '<td style="padding:8px 14px;text-align:right;font-size:12px;font-variant-numeric:tabular-nums;color:var(--text)">' + fmt(d[PROD_COLS[j].key], PROD_COLS[j].type) + '</td>';
@@ -2286,6 +2299,35 @@ function renderProductTable() {
       html += '<td style="padding:8px 14px;text-align:right;font-size:12px;font-variant-numeric:tabular-nums;color:var(--text);border-left:' + (j===0 ? '1px solid var(--border2)' : 'none') + '">' + fmt(d[EXTRA[j].key], EXTRA[j].type) + '</td>';
     }
     html += '</tr>';
+    if (prodPrevMode) {
+      var prevRange = getPrevRange(dateFrom, dateTo);
+      var prevProdMap = {};
+      for (var pi = 0; pi < rows.length; pi++) {
+        var pr = rows[pi];
+        var pDateStr = (pr['일자'] || '').slice(0, 10);
+        if (!pDateStr || pDateStr < prevRange.from || pDateStr > prevRange.to) continue;
+        var pprod = (pr['제품'] || '').trim() || '(미분류)';
+        if (pprod !== r.name) continue;
+        if (!prevProdMap[pprod]) prevProdMap[pprod] = {name:pprod, cost:0, impressions:0, clicks:0, conversions:0, revenue:0, cart_conv:0, cart_rev:0};
+        prevProdMap[pprod].cost        += Number(pr['총비용(vat-)'])     || 0;
+        prevProdMap[pprod].impressions += Number(pr['노출수'])            || 0;
+        prevProdMap[pprod].clicks      += Number(pr['클릭수'])            || 0;
+        prevProdMap[pprod].conversions += Number(pr['구매완료 전환수'])    || 0;
+        prevProdMap[pprod].revenue     += Number(pr['구매완료 매출액'])    || 0;
+        prevProdMap[pprod].cart_conv   += Number(pr['장바구니 전환수'])    || 0;
+        prevProdMap[pprod].cart_rev    += Number(pr['장바구니 매출액'])    || 0;
+      }
+      var pd = prevProdMap[r.name] ? calcExtended(prevProdMap[r.name]) : calcExtended({cost:0,impressions:0,clicks:0,conversions:0,revenue:0,cart_conv:0,cart_rev:0});
+      html += '<tr style="border-bottom:1px solid var(--border);background:rgba(59,125,246,0.07)">';
+      html += '<td style="padding:3px 14px 6px 18px;font-size:10px;color:#3b7de9;font-weight:500;white-space:nowrap;position:sticky;left:0;background:rgba(235,241,255,0.97);z-index:1">↳ 이전 동기간</td>';
+      for (var j = 0; j < PROD_COLS.length; j++) {
+        html += '<td style="padding:3px 14px 6px;text-align:right;font-size:11px;font-variant-numeric:tabular-nums;color:#374151">' + fmt(pd[PROD_COLS[j].key], PROD_COLS[j].type) + changeArrow(d[PROD_COLS[j].key], pd[PROD_COLS[j].key], PROD_COLS[j].type) + '</td>';
+      }
+      for (var j = 0; j < EXTRA.length; j++) {
+        html += '<td style="padding:3px 14px 6px;text-align:right;font-size:11px;font-variant-numeric:tabular-nums;color:#374151;border-left:' + (j===0 ? '1px solid var(--border2)' : 'none') + '">' + fmt(pd[EXTRA[j].key], EXTRA[j].type) + changeArrow(d[EXTRA[j].key], pd[EXTRA[j].key], EXTRA[j].type) + '</td>';
+      }
+      html += '</tr>';
+    }
   }
   if (allRows.length > 1) {
     var tc = calcExtended(total);
