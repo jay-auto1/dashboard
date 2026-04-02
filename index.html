@@ -392,6 +392,19 @@ function getCampaignData(brKey, chKey, dateFrom, dateTo) {
   return result;
 }
 
+// CSV 한 줄 파싱 (따옴표 안 쉼표 처리)
+function splitCSVLine(line) {
+  var result = [], cur = '', inQ = false;
+  for (var i = 0; i < line.length; i++) {
+    var c = line[i];
+    if (c === '"') { inQ = !inQ; }
+    else if (c === ',' && !inQ) { result.push(cur.trim().replace(/^"|"$/g,'')); cur = ''; }
+    else { cur += c; }
+  }
+  result.push(cur.trim().replace(/^"|"$/g,''));
+  return result;
+}
+
 // CSV 문자열 파싱 (따옴표 안 쉼표 처리)
 function parseCSV(text) {
   // 셀 안 줄바꿈 제거
