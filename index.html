@@ -909,7 +909,11 @@ function sumData(bk, ck, dataset) {
 }
 
 function calc(d) {
-  var installs = d.app_installs || 0;
+  var installs   = d.app_installs || 0;
+  var cartConv   = d.cart_conv  || 0;
+  var cartRev    = d.cart_rev   || 0;
+  var totalConv  = (d.conversions || 0) + cartConv;
+  var totalRev   = (d.revenue    || 0) + cartRev;
   return {
     cost:         d.cost,
     revenue:      d.revenue,
@@ -924,7 +928,12 @@ function calc(d) {
     cpa:          d.conversions > 0 ? d.cost / d.conversions : 0,
     app_installs: installs,
     cpi:          installs > 0 ? d.cost / installs : 0,
-    install_rate: d.clicks > 0 ? installs / d.clicks : 0
+    install_rate: d.clicks > 0 ? installs / d.clicks : 0,
+    cart_conv:    cartConv,
+    cart_rev:     cartRev,
+    total_conv:   totalConv,
+    total_rev:    totalRev,
+    total_cpa:    totalConv > 0 ? Math.round(d.cost / totalConv) : 0
   };
 }
 
@@ -1381,19 +1390,24 @@ function renderRoasCvr(cm, ck) {
 }
 
 var TABLE_COLS = [
-  {key:'cost',        label:'비용',   type:'won'},
-  {key:'revenue',     label:'매출',   type:'won'},
-  {key:'roas',        label:'ROAS',   type:'roas'},
-  {key:'conversions', label:'전환수', type:'num'},
-  {key:'cpa',         label:'CPA',    type:'cpc'},
-  {key:'cvr',         label:'CVR',    type:'pct'},
-  {key:'clicks',      label:'클릭',   type:'num'},
-  {key:'cpc',         label:'CPC',    type:'cpc'},
-  {key:'ctr',         label:'CTR',    type:'pct'},
-  {key:'impressions', label:'노출',   type:'num'},
-  {key:'cpm',         label:'CPM',    type:'cpc'}
+  {key:'cost',        label:'비용',     type:'won'},
+  {key:'revenue',     label:'매출',     type:'won'},
+  {key:'roas',        label:'ROAS',     type:'roas'},
+  {key:'conversions', label:'전환수',   type:'num'},
+  {key:'cpa',         label:'CPA',      type:'cpc'},
+  {key:'cvr',         label:'CVR',      type:'pct'},
+  {key:'clicks',      label:'클릭',     type:'num'},
+  {key:'cpc',         label:'CPC',      type:'cpc'},
+  {key:'ctr',         label:'CTR',      type:'pct'},
+  {key:'impressions', label:'노출',     type:'num'},
+  {key:'cpm',         label:'CPM',      type:'cpc'},
+  {key:'cart_conv',   label:'장바구니수',  type:'num'},
+  {key:'cart_rev',    label:'장바구니매출', type:'won'},
+  {key:'total_conv',  label:'총전환수',    type:'num'},
+  {key:'total_rev',   label:'총매출',      type:'won'},
+  {key:'total_cpa',   label:'총CPA',       type:'cpc'}
 ];
-var selectedCols = ['cost','revenue','roas','conversions','cpa','cvr','clicks','cpc','ctr','impressions','cpm'];
+var selectedCols = ['cost','revenue','roas','conversions','cpa','cvr','clicks','cpc','ctr','impressions','cpm','cart_conv','cart_rev','total_conv','total_rev','total_cpa'];
 var campSelectedCols = ['cost','revenue','roas','conversions','cpa','clicks','ctr','impressions'];
 
 function buildCampColDropdown() {
@@ -1694,15 +1708,7 @@ function renderCampaignTable() {
   // 네이버 SA/DA 전용 추가 컬럼
   var NAVER_CHS = ['nsa', 'nbsa', 'ngfa'];
   var isNaverOnly = activeChs.length > 0 && activeChs.every(function(ch){ return NAVER_CHS.indexOf(ch) !== -1; });
-  var EXTRA_COLS = isNaverOnly ? [
-    {key:'conversions', label:'구매완료수',  type:'num'},
-    {key:'cart_conv',   label:'장바구니수',  type:'num'},
-    {key:'revenue',     label:'구매완료매출', type:'won'},
-    {key:'cart_rev',    label:'장바구니매출', type:'won'},
-    {key:'total_conv',  label:'총전환수',    type:'num'},
-    {key:'total_rev',   label:'총매출',      type:'won'},
-    {key:'total_cpa',   label:'총CPA',       type:'cpc'}
-  ] : [];
+  var EXTRA_COLS = [];
 
   // 헤더
   var thBase = 'padding:9px 14px;font-family:\'Inter\',sans-serif;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border2);background:var(--bg3);white-space:nowrap;cursor:pointer;user-select:none';
@@ -2537,18 +2543,7 @@ function renderProductTable() {
   for (var i = 0; i < PROD_COLS.length; i++) {
     headHtml += '<th style="' + thBase + ';text-align:right" onclick="sortProdTable(this.dataset.k)" data-k="' + PROD_COLS[i].key + '">' + PROD_COLS[i].label + sortArrow(PROD_COLS[i].key, prodTableSort) + '</th>';
   }
-  var EXTRA = [
-    {key:'conversions', label:'구매완료수',   type:'num'},
-    {key:'cart_conv',   label:'장바구니수',   type:'num'},
-    {key:'revenue',     label:'구매완료매출', type:'won'},
-    {key:'cart_rev',    label:'장바구니매출', type:'won'},
-    {key:'total_conv',  label:'총전환수',     type:'num'},
-    {key:'total_rev',   label:'총매출',       type:'won'},
-    {key:'total_cpa',   label:'총CPA',        type:'cpc'}
-  ];
-  for (var i = 0; i < EXTRA.length; i++) {
-    headHtml += '<th style="' + thBase + ';text-align:right;border-left:' + (i===0 ? '1px solid var(--border2)' : 'none') + '">' + EXTRA[i].label + '</th>';
-  }
+
   document.getElementById('prodTableHead').innerHTML = headHtml;
 
   var prodMap = {};
@@ -2569,7 +2564,7 @@ function renderProductTable() {
 
   var allRows = Object.values(prodMap).filter(function(r){ return r.impressions > 0 || r.conversions > 0; });
   allRows.sort(function(a, b) {
-    var da = calcExtended(a), db = calcExtended(b);
+    var da = calc(a), db = calc(b);
     var av = prodTableSort.key === 'name' ? a.name : (da[prodTableSort.key] || 0);
     var bv = prodTableSort.key === 'name' ? b.name : (db[prodTableSort.key] || 0);
     if (av < bv) return prodTableSort.asc ? -1 : 1;
@@ -2586,7 +2581,7 @@ function renderProductTable() {
   var total = {cost:0, impressions:0, clicks:0, conversions:0, revenue:0, cart_conv:0, cart_rev:0};
   for (var i = 0; i < allRows.length; i++) {
     var r = allRows[i];
-    var d = calcExtended(r);
+    var d = calc(r);
     total.cost += r.cost; total.impressions += r.impressions; total.clicks += r.clicks;
     total.conversions += r.conversions; total.revenue += r.revenue;
     total.cart_conv += (r.cart_conv||0); total.cart_rev += (r.cart_rev||0);
@@ -2594,9 +2589,6 @@ function renderProductTable() {
     html += '<td style="padding:10px 14px;font-size:12px;color:var(--text);white-space:nowrap;position:sticky;left:0;background:var(--bg2);z-index:1">' + r.name + '</td>';
     for (var j = 0; j < PROD_COLS.length; j++) {
       html += '<td style="padding:8px 14px;text-align:right;font-size:12px;font-variant-numeric:tabular-nums;color:var(--text)">' + fmt(d[PROD_COLS[j].key], PROD_COLS[j].type) + '</td>';
-    }
-    for (var j = 0; j < EXTRA.length; j++) {
-      html += '<td style="padding:8px 14px;text-align:right;font-size:12px;font-variant-numeric:tabular-nums;color:var(--text);border-left:' + (j===0 ? '1px solid var(--border2)' : 'none') + '">' + fmt(d[EXTRA[j].key], EXTRA[j].type) + '</td>';
     }
     html += '</tr>';
     if (prodPrevMode) {
@@ -2617,27 +2609,21 @@ function renderProductTable() {
         prevProdMap[pprod].cart_conv   += Number(pr['장바구니 전환수'])    || 0;
         prevProdMap[pprod].cart_rev    += Number(pr['장바구니 매출액'])    || 0;
       }
-      var pd = prevProdMap[r.name] ? calcExtended(prevProdMap[r.name]) : calcExtended({cost:0,impressions:0,clicks:0,conversions:0,revenue:0,cart_conv:0,cart_rev:0});
+      var pd = prevProdMap[r.name] ? calc(prevProdMap[r.name]) : calc({cost:0,impressions:0,clicks:0,conversions:0,revenue:0,cart_conv:0,cart_rev:0});
       html += '<tr style="border-bottom:1px solid var(--border);background:rgba(59,125,246,0.07)">';
       html += '<td style="padding:3px 14px 6px 18px;font-size:10px;color:#3b7de9;font-weight:500;white-space:nowrap;position:sticky;left:0;background:rgba(235,241,255,0.97);z-index:1">↳ 이전 동기간</td>';
       for (var j = 0; j < PROD_COLS.length; j++) {
         html += '<td style="padding:3px 14px 6px;text-align:right;font-size:11px;font-variant-numeric:tabular-nums;color:#374151">' + fmt(pd[PROD_COLS[j].key], PROD_COLS[j].type) + changeArrow(d[PROD_COLS[j].key], pd[PROD_COLS[j].key], PROD_COLS[j].type) + '</td>';
       }
-      for (var j = 0; j < EXTRA.length; j++) {
-        html += '<td style="padding:3px 14px 6px;text-align:right;font-size:11px;font-variant-numeric:tabular-nums;color:#374151;border-left:' + (j===0 ? '1px solid var(--border2)' : 'none') + '">' + fmt(pd[EXTRA[j].key], EXTRA[j].type) + changeArrow(d[EXTRA[j].key], pd[EXTRA[j].key], EXTRA[j].type) + '</td>';
-      }
       html += '</tr>';
     }
   }
   if (allRows.length > 1) {
-    var tc = calcExtended(total);
+    var tc = calc(total);
     html += '<tr style="border-top:2px solid var(--border2);background:var(--bg3)">';
     html += '<td style="padding:10px 14px;font-size:12px;font-weight:600">합계</td>';
     for (var j = 0; j < PROD_COLS.length; j++) {
       html += '<td style="padding:10px 14px;text-align:right;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums">' + fmt(tc[PROD_COLS[j].key], PROD_COLS[j].type) + '</td>';
-    }
-    for (var j = 0; j < EXTRA.length; j++) {
-      html += '<td style="padding:10px 14px;text-align:right;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;border-left:' + (j===0 ? '1px solid var(--border2)' : 'none') + '">' + fmt(tc[EXTRA[j].key], EXTRA[j].type) + '</td>';
     }
     html += '</tr>';
   }
