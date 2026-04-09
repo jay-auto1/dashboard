@@ -272,6 +272,7 @@ tbody td:first-child { text-align: left; font-family: 'Noto Sans KR', sans-serif
   <div class="table-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
     <span>캠페인 유형별 데이터</span>
     <div style="display:flex;align-items:center;gap:8px">
+      <button id="tablePrevBtn" class="date-btn" onclick="toggleTablePrev()" style="font-size:11px;padding:4px 12px;border-radius:6px">동기간 비교</button>
       <div style="position:relative">
         <button class="col-dropdown-btn" id="colDropBtn" onclick="toggleColDrop()">
           컬럼 선택 <span id="colCount"></span>
@@ -293,6 +294,7 @@ tbody td:first-child { text-align: left; font-family: 'Noto Sans KR', sans-serif
   <div class="table-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
     <span>캠페인/그룹별 데이터</span>
     <div style="display:flex;align-items:center;gap:8px">
+      <button id="campPrevBtn" class="date-btn" onclick="toggleCampPrev()" style="font-size:11px;padding:4px 12px;border-radius:6px">동기간 비교</button>
       <div style="position:relative">
         <button class="col-dropdown-btn" id="campColDropBtn" onclick="toggleCampColDrop()">
           컬럼 선택 <span id="campColCount"></span>
@@ -318,6 +320,7 @@ tbody td:first-child { text-align: left; font-family: 'Noto Sans KR', sans-serif
   <div class="table-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
     <span>제품별 데이터</span>
     <div style="display:flex;align-items:center;gap:8px">
+      <button id="prodPrevBtn" class="date-btn" onclick="toggleProdPrev()" style="font-size:11px;padding:4px 12px;border-radius:6px">동기간 비교</button>
       <div style="position:relative">
         <button class="col-dropdown-btn" id="prodColDropBtn" onclick="toggleProdColDrop()">
           컬럼 선택 <span id="prodColCount"></span>
@@ -1497,9 +1500,29 @@ var campTableSort = {key: 'cost', asc: false};
 var campPrevMode  = false;
 var tablePrevMode = false;
 
-function toggleTablePrev() {}
+function toggleTablePrev() {
+  tablePrevMode = !tablePrevMode;
+  var btn = document.getElementById('tablePrevBtn');
+  if (btn) {
+    btn.style.background  = tablePrevMode ? 'var(--text)' : 'transparent';
+    btn.style.color       = tablePrevMode ? 'var(--bg)'   : 'var(--muted)';
+    btn.style.borderColor = tablePrevMode ? 'var(--text)' : 'var(--border2)';
+  }
+  var bk = brandKeys(), ck = chKeys();
+  var cm = sumData(bk, ck, RAW);
+  renderTable(cm, ck);
+}
 
-function toggleCampPrev() {}
+function toggleCampPrev() {
+  campPrevMode = !campPrevMode;
+  var btn = document.getElementById('campPrevBtn');
+  if (btn) {
+    btn.style.background  = campPrevMode ? 'var(--text)' : 'transparent';
+    btn.style.color       = campPrevMode ? 'var(--bg)'   : 'var(--muted)';
+    btn.style.borderColor = campPrevMode ? 'var(--text)' : 'var(--border2)';
+  }
+  renderCampaignTable();
+}
 var expandedCamps  = {}; // 'campName' → true/false
 var expandedGroups = {}; // 'campName__groupName' → true/false
 
@@ -2162,8 +2185,8 @@ function setProduct(btn) {
 
 // 제품 그룹 정의 ← 여기서 수정하세요
 var PRODUCT_GROUPS = {
-  '메인제품': ['헤드레스트', '비슬림', '프리시트', '방석', '허리쿠션', '프리백커버', '콘솔쿠션', '핸들커버', '킥매트'],
-  '기타제품': ['하이퍼젯', '루미락', '사운드픽셀', '라나매트', '모네틱', '심포라', '데스크매트', '트렁크정리함', '대시보드커버', '전자기기'],
+  '메인제품': ['헤드레스트', '핸들커버', '방석', '킥매트', '허리쿠션', '프리백커버', '콘솔쿠션'],
+  '기타제품': ['대시보드커버', '데스크매트', '라나매트', '루미락', '모네틱', '사운드픽셀', '심포라', '전자기기', '트렁크정리함', '하이퍼젯'],
   '공통': ['공통']
 };
 var PRODUCT_GROUP_COLORS = {'메인제품': '#4f8ef7', '기타제품': '#1D9E75', '공통': '#888780'};
@@ -2450,7 +2473,16 @@ var prodSelectedCols = ['cost','revenue','roas','conversions','cpa','clicks','ct
 var prodTableSort = {key: 'cost', asc: false};
 var prodPrevMode = false;
 
-function toggleProdPrev() {}
+function toggleProdPrev() {
+  prodPrevMode = !prodPrevMode;
+  var btn = document.getElementById('prodPrevBtn');
+  if (btn) {
+    btn.style.background  = prodPrevMode ? 'var(--text)' : 'transparent';
+    btn.style.color       = prodPrevMode ? 'var(--bg)'   : 'var(--muted)';
+    btn.style.borderColor = prodPrevMode ? 'var(--text)' : 'var(--border2)';
+  }
+  renderProductTable();
+}
 
 function buildProdColDropdown() {
   var html = '';
