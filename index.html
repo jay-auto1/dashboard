@@ -1407,8 +1407,8 @@ var TABLE_COLS = [
   {key:'total_rev',   label:'총매출',      type:'won'},
   {key:'total_cpa',   label:'총CPA',       type:'cpc'}
 ];
-var selectedCols = ['cost','revenue','roas','conversions','cpa','cvr','clicks','cpc','ctr','impressions','cpm','cart_conv','cart_rev','total_conv','total_rev','total_cpa'];
-var campSelectedCols = ['cost','revenue','roas','conversions','cpa','clicks','ctr','impressions'];
+var selectedCols = ['cost','revenue','roas','conversions','cpa','cvr','clicks','cpc','ctr','impressions','cpm'];
+var campSelectedCols = ['cost','revenue','roas','conversions','cpa','cvr','clicks','cpc','ctr','impressions','cpm'];
 
 function buildCampColDropdown() {
   var html = '';
@@ -2475,7 +2475,7 @@ function updateLabel() {
 
 
 // ── 제품별 데이터 테이블 ──────────────────────────────────────────────────
-var prodSelectedCols = ['cost','revenue','roas','conversions','cpa','clicks','ctr','impressions'];
+var prodSelectedCols = ['cost','revenue','roas','conversions','cpa','cvr','clicks','cpc','ctr','impressions','cpm'];
 var prodTableSort = {key: 'cost', asc: false};
 var prodPrevMode = false;
 
