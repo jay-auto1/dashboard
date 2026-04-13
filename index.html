@@ -2434,6 +2434,8 @@ function setPreset(btn, days) {
   yesterday.setDate(yesterday.getDate() - 1);
   var from = new Date(yesterday);
   from.setDate(yesterday.getDate() - days + 1);
+  var minDate = new Date('2026-02-01');
+  if (from < minDate) from = minDate;
   document.getElementById('dateFrom').value = from.toISOString().slice(0, 10);
   document.getElementById('dateTo').value   = yesterday.toISOString().slice(0, 10);
   updateLabel();
