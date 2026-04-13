@@ -202,11 +202,16 @@ tbody td:first-child { text-align: left; font-family: 'Noto Sans KR', sans-serif
       <button class="date-btn" onclick="setPreset(this,14)">14일</button>
       <button class="date-btn active" onclick="setPreset(this,30)">30일</button>
       <button class="date-btn" onclick="setPreset(this,90)">90일</button>
+      <button class="date-btn" id="allRangeBtn" onclick="setAllRange(this)">전체</button>
     </div>
-    <div class="date-input-wrap">
-      <input type="date" id="dateFrom" onchange="applyRange()" value="2026-02-22">
-      <span class="date-sep">—</span>
-      <input type="date" id="dateTo" onchange="applyRange()" value="2026-03-24">
+    <div style="display:flex;align-items:center;gap:6px">
+      <button onclick="shiftDateRange(-1)" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:1px solid var(--border2);border-radius:6px;background:transparent;color:var(--muted);cursor:pointer;padding:0" title="이전 기간"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M7 1L3 5L7 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="date-input-wrap">
+        <input type="date" id="dateFrom" onchange="applyRange()" value="2026-02-22" min="2026-02-01">
+        <span class="date-sep">—</span>
+        <input type="date" id="dateTo" onchange="applyRange()" value="2026-03-24" min="2026-02-01">
+      </div>
+      <button onclick="shiftDateRange(1)" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:1px solid var(--border2);border-radius:6px;background:transparent;color:var(--muted);cursor:pointer;padding:0" title="다음 기간"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 1L7 5L3 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
     <button class="apply-btn" onclick="applyRange()">적용</button>
   </div>
@@ -2183,8 +2188,8 @@ function setProduct(btn) {
 
 // 제품 그룹 정의 ← 여기서 수정하세요
 var PRODUCT_GROUPS = {
-  '메인제품': ['헤드레스트', '1열목쿠션', '비슬림', '프리시트', '방석', '허리쿠션', '프리백커버', '콘솔쿠션', '핸들커버', '킥매트'],
-  '기타제품': ['하이퍼젯', '루미락', '사운드픽셀', '라나매트', '모네틱', '심포라', '데스크매트', '트렁크정리함', '대시보드커버', '전자기기'],
+  '메인제품': ['헤드레스트', '핸들커버', '방석', '킥매트', '허리쿠션', '프리백커버', '콘솔쿠션'],
+  '기타제품': ['대시보드커버', '데스크매트', '라나매트', '루미락', '모네틱', '사운드픽셀', '심포라', '전자기기', '트렁크정리함', '하이퍼젯'],
   '공통': ['공통']
 };
 var PRODUCT_GROUP_COLORS = {'메인제품': '#4f8ef7', '기타제품': '#1D9E75', '공통': '#888780'};
@@ -2442,7 +2447,49 @@ function applyRange() {
   for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
   updateLabel();
   saveDateRange();
-  sheetsCache.aimban = null; campaignCache = {}; // 날짜 바뀌면 캐시 초기화
+  sheetsCache.aimban = null; campaignCache = {};
+  renderWithData();
+}
+
+// 전체 기간 조회
+function setAllRange(btn) {
+  var btns = document.querySelectorAll('.date-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+  btn.classList.add('active');
+  document.getElementById('dateFrom').value = '2026-02-01';
+  var today = new Date();
+  today.setDate(today.getDate() - 1);
+  document.getElementById('dateTo').value = today.toISOString().slice(0, 10);
+  updateLabel();
+  saveDateRange();
+  sheetsCache.aimban = null; campaignCache = {};
+  renderWithData();
+}
+
+// 날짜 범위 이동 (dir: -1=이전, 1=다음)
+function shiftDateRange(dir) {
+  var from = new Date(document.getElementById('dateFrom').value);
+  var to   = new Date(document.getElementById('dateTo').value);
+  var days = Math.round((to - from) / (1000 * 60 * 60 * 24)) + 1;
+  var newFrom = new Date(from);
+  var newTo   = new Date(to);
+  newFrom.setDate(from.getDate() + dir * days);
+  newTo.setDate(to.getDate() + dir * days);
+  // 최소 날짜 제한 (2026-02-01)
+  var minDate = new Date('2026-02-01');
+  if (newFrom < minDate) {
+    var diff = Math.round((minDate - newFrom) / (1000 * 60 * 60 * 24));
+    newFrom.setDate(newFrom.getDate() + diff);
+    newTo.setDate(newTo.getDate() + diff);
+  }
+  document.getElementById('dateFrom').value = newFrom.toISOString().slice(0, 10);
+  document.getElementById('dateTo').value   = newTo.toISOString().slice(0, 10);
+  // 프리셋 버튼 비활성화
+  var btns = document.querySelectorAll('.date-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+  updateLabel();
+  saveDateRange();
+  sheetsCache.aimban = null; campaignCache = {};
   renderWithData();
 }
 
