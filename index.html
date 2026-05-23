@@ -202,16 +202,11 @@ tbody td:first-child { text-align: left; font-family: 'Noto Sans KR', sans-serif
       <button class="date-btn" onclick="setPreset(this,14)">14일</button>
       <button class="date-btn active" onclick="setPreset(this,30)">30일</button>
       <button class="date-btn" onclick="setPreset(this,90)">90일</button>
-      <button class="date-btn" id="allRangeBtn" onclick="setAllRange(this)">전체</button>
     </div>
-    <div style="display:flex;align-items:center;gap:6px">
-      <button onclick="shiftDateRange(-1)" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:1px solid var(--border2);border-radius:6px;background:transparent;color:var(--muted);cursor:pointer;padding:0" title="이전 기간"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M7 1L3 5L7 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-      <div class="date-input-wrap">
-        <input type="date" id="dateFrom" onchange="applyRange()" value="2026-02-22" min="2026-02-01">
-        <span class="date-sep">—</span>
-        <input type="date" id="dateTo" onchange="applyRange()" value="2026-03-24" min="2026-02-01">
-      </div>
-      <button onclick="shiftDateRange(1)" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:1px solid var(--border2);border-radius:6px;background:transparent;color:var(--muted);cursor:pointer;padding:0" title="다음 기간"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 1L7 5L3 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <div class="date-input-wrap">
+      <input type="date" id="dateFrom" onchange="applyRange()" value="2026-02-22">
+      <span class="date-sep">—</span>
+      <input type="date" id="dateTo" onchange="applyRange()" value="2026-03-24">
     </div>
     <button class="apply-btn" onclick="applyRange()">적용</button>
   </div>
@@ -665,7 +660,7 @@ function aggregateNSAHierarchyAimban(rows, dateFrom, dateTo, chKey) {
     var rowKey = tp === '브랜드검색' ? 'nbsa' : tp === '쇼핑검색' ? 'ngfa' : tp === '파워컨텐츠' ? 'kakao' : 'nsa';
     if (chKey !== 'all' && rowKey !== chKey) continue;
     addToHierarchy(out, r['캠페인명']||'(미분류)', r['광고그룹명']||'', null, dateStr, dateFrom, dateTo,
-      Number(r['총비용(vat+)'])||0, Number(r['노출수'])||0, Number(r['클릭수'])||0,
+      Number(r['총비용(vat-)'])||0, Number(r['노출수'])||0, Number(r['클릭수'])||0,
       Number(r['구매완료 전환수'])||0, Number(r['구매완료 매출액'])||0,
       Number(r['장바구니 전환수'])||0, Number(r['장바구니 매출액'])||0);
   }
@@ -723,7 +718,7 @@ function loadAimban(callback) {
                 : tp === '파워컨텐츠' ? 'kakao'
                 : 'nsa';
         if (!byType[key][dateStr]) byType[key][dateStr] = {date:dateStr, cost:0, impressions:0, clicks:0, conversions:0, revenue:0};
-        byType[key][dateStr].cost        += Number(r['총비용(vat+)'])      || 0;
+        byType[key][dateStr].cost        += Number(r['총비용(vat-)'])      || 0;
         byType[key][dateStr].impressions += Number(r['노출수'])             || 0;
         byType[key][dateStr].clicks      += Number(r['클릭수'])             || 0;
         byType[key][dateStr].conversions += Number(r['구매완료 전환수'])     || 0;
@@ -779,7 +774,7 @@ function applyAimban(apiData, dateFrom, dateTo) {
       var tp = r['캠페인유형'] || '';
       var key = tp === '브랜드검색' ? 'nbsa' : tp === '쇼핑검색' ? 'ngfa' : tp === '파워컨텐츠' ? 'kakao' : 'nsa';
       if (!byType[key][dateStr]) byType[key][dateStr] = {date:dateStr, cost:0, impressions:0, clicks:0, conversions:0, revenue:0};
-      byType[key][dateStr].cost        += Number(r['총비용(vat+)'])      || 0;
+      byType[key][dateStr].cost        += Number(r['총비용(vat-)'])      || 0;
       byType[key][dateStr].impressions += Number(r['노출수'])             || 0;
       byType[key][dateStr].clicks      += Number(r['클릭수'])             || 0;
       byType[key][dateStr].conversions += Number(r['구매완료 전환수'])     || 0;
@@ -790,6 +785,12 @@ function applyAimban(apiData, dateFrom, dateTo) {
 
   var byType     = aggregateByType(filteredRows);
   var filteredData = {nsa: byType.nsa, nbsa: byType.nbsa, ngfa: byType.ngfa, kakao: byType.kakao, _rawNSA: filteredRows};
+
+  // 차트용 날짜별 데이터 업데이트 (제품 필터 시 차트도 변경되도록)
+  sheetsCache.aimban.nsa   = byType.nsa;
+  sheetsCache.aimban.nbsa  = byType.nbsa;
+  sheetsCache.aimban.ngfa  = byType.ngfa;
+  sheetsCache.aimban.kakao = byType.kakao;
 
   RAW.aimban  = {};
   PREV.aimban = {};
@@ -914,11 +915,7 @@ function sumData(bk, ck, dataset) {
 }
 
 function calc(d) {
-  var installs   = d.app_installs || 0;
-  var cartConv   = d.cart_conv  || 0;
-  var cartRev    = d.cart_rev   || 0;
-  var totalConv  = (d.conversions || 0) + cartConv;
-  var totalRev   = (d.revenue    || 0) + cartRev;
+  var installs = d.app_installs || 0;
   return {
     cost:         d.cost,
     revenue:      d.revenue,
@@ -933,12 +930,7 @@ function calc(d) {
     cpa:          d.conversions > 0 ? d.cost / d.conversions : 0,
     app_installs: installs,
     cpi:          installs > 0 ? d.cost / installs : 0,
-    install_rate: d.clicks > 0 ? installs / d.clicks : 0,
-    cart_conv:    cartConv,
-    cart_rev:     cartRev,
-    total_conv:   totalConv,
-    total_rev:    totalRev,
-    total_cpa:    totalConv > 0 ? Math.round(d.cost / totalConv) : 0
+    install_rate: d.clicks > 0 ? installs / d.clicks : 0
   };
 }
 
@@ -1395,25 +1387,20 @@ function renderRoasCvr(cm, ck) {
 }
 
 var TABLE_COLS = [
-  {key:'cost',        label:'비용',     type:'won'},
-  {key:'revenue',     label:'매출',     type:'won'},
-  {key:'roas',        label:'ROAS',     type:'roas'},
-  {key:'conversions', label:'전환수',   type:'num'},
-  {key:'cpa',         label:'CPA',      type:'cpc'},
-  {key:'cvr',         label:'CVR',      type:'pct'},
-  {key:'clicks',      label:'클릭',     type:'num'},
-  {key:'cpc',         label:'CPC',      type:'cpc'},
-  {key:'ctr',         label:'CTR',      type:'pct'},
-  {key:'impressions', label:'노출',     type:'num'},
-  {key:'cpm',         label:'CPM',      type:'cpc'},
-  {key:'cart_conv',   label:'장바구니수',  type:'num'},
-  {key:'cart_rev',    label:'장바구니매출', type:'won'},
-  {key:'total_conv',  label:'총전환수',    type:'num'},
-  {key:'total_rev',   label:'총매출',      type:'won'},
-  {key:'total_cpa',   label:'총CPA',       type:'cpc'}
+  {key:'cost',        label:'비용',   type:'won'},
+  {key:'revenue',     label:'매출',   type:'won'},
+  {key:'roas',        label:'ROAS',   type:'roas'},
+  {key:'conversions', label:'전환수', type:'num'},
+  {key:'cpa',         label:'CPA',    type:'cpc'},
+  {key:'cvr',         label:'CVR',    type:'pct'},
+  {key:'clicks',      label:'클릭',   type:'num'},
+  {key:'cpc',         label:'CPC',    type:'cpc'},
+  {key:'ctr',         label:'CTR',    type:'pct'},
+  {key:'impressions', label:'노출',   type:'num'},
+  {key:'cpm',         label:'CPM',    type:'cpc'}
 ];
 var selectedCols = ['cost','revenue','roas','conversions','cpa','cvr','clicks','cpc','ctr','impressions','cpm'];
-var campSelectedCols = ['cost','revenue','roas','conversions','cpa','cvr','clicks','cpc','ctr','impressions','cpm'];
+var campSelectedCols = ['cost','revenue','roas','conversions','cpa','clicks','ctr','impressions'];
 
 function buildCampColDropdown() {
   var html = '';
@@ -1713,7 +1700,15 @@ function renderCampaignTable() {
   // 네이버 SA/DA 전용 추가 컬럼
   var NAVER_CHS = ['nsa', 'nbsa', 'ngfa'];
   var isNaverOnly = activeChs.length > 0 && activeChs.every(function(ch){ return NAVER_CHS.indexOf(ch) !== -1; });
-  var EXTRA_COLS = [];
+  var EXTRA_COLS = isNaverOnly ? [
+    {key:'conversions', label:'구매완료수',  type:'num'},
+    {key:'cart_conv',   label:'장바구니수',  type:'num'},
+    {key:'revenue',     label:'구매완료매출', type:'won'},
+    {key:'cart_rev',    label:'장바구니매출', type:'won'},
+    {key:'total_conv',  label:'총전환수',    type:'num'},
+    {key:'total_rev',   label:'총매출',      type:'won'},
+    {key:'total_cpa',   label:'총CPA',       type:'cpc'}
+  ] : [];
 
   // 헤더
   var thBase = 'padding:9px 14px;font-family:\'Inter\',sans-serif;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border2);background:var(--bg3);white-space:nowrap;cursor:pointer;user-select:none';
@@ -1727,10 +1722,11 @@ function renderCampaignTable() {
   for (var j = 0; j < EXTRA_COLS.length; j++) {
     headHtml += '<th style="' + thBase + ';text-align:right;border-left:1px solid var(--border2)" onclick="sortCampTable(\'' + EXTRA_COLS[j].key + '\')">' + EXTRA_COLS[j].label + sortArrow(EXTRA_COLS[j].key, campTableSort) + '</th>';
   }
+  headHtml += '<th style="' + thBase + ';text-align:center;width:52px;cursor:default">메모</th>';
   document.getElementById('campTableHead').innerHTML = headHtml;
 
   var multiCh = activeChs.length > 1;
-  var colSpan = CAMP_COLS.length + EXTRA_COLS.length + 1 + (multiCh ? 1 : 0);
+  var colSpan = CAMP_COLS.length + EXTRA_COLS.length + 2 + (multiCh ? 1 : 0);
 
   // 캠페인별 계층 데이터 수집
   var hierMerged = {};
@@ -1792,14 +1788,32 @@ function renderCampaignTable() {
 
   var allRows = Object.values(hierMerged).filter(function(r){ return r.impressions > 0 || r.conversions > 0; });
 
-  allRows.sort(function(a, b) {
-    var da = calc(a), db = calc(b);
-    var av = campTableSort.key === 'name' ? a.name : (da[campTableSort.key] || 0);
-    var bv = campTableSort.key === 'name' ? b.name : (db[campTableSort.key] || 0);
-    if (av < bv) return campTableSort.asc ? -1 : 1;
-    if (av > bv) return campTableSort.asc ? 1 : -1;
-    return 0;
-  });
+  // 캠페인유형 매핑 (ch key → 유형명/색상)
+  var CH_TYPE_ORDER = ['ngfa', 'nsa', 'nbsa', 'kakao'];
+  var CH_TYPE_STYLE = {
+    ngfa:  {label:'쇼핑검색',   bg:'rgba(0,153,74,0.08)',   border:'rgba(0,153,74,0.25)',   dot:'#00994a'},
+    nsa:   {label:'파워링크',   bg:'rgba(0,151,184,0.08)',  border:'rgba(0,151,184,0.25)',  dot:'#0097b8'},
+    nbsa:  {label:'브랜드검색', bg:'rgba(124,95,201,0.08)', border:'rgba(124,95,201,0.25)', dot:'#7c5fc9'},
+    kakao: {label:'파워컨텐츠', bg:'rgba(196,168,0,0.08)',  border:'rgba(196,168,0,0.25)',  dot:'#c4a800'}
+  };
+
+  // 유형별로 그룹핑 후 각 그룹 내에서 정렬
+  var rowsByType = {};
+  for (var i = 0; i < allRows.length; i++) {
+    var ch = allRows[i].ch;
+    if (!rowsByType[ch]) rowsByType[ch] = [];
+    rowsByType[ch].push(allRows[i]);
+  }
+  for (var ch in rowsByType) {
+    rowsByType[ch].sort(function(a, b) {
+      var da = calc(a), db = calc(b);
+      var av = campTableSort.key === 'name' ? a.name : (da[campTableSort.key] || 0);
+      var bv = campTableSort.key === 'name' ? b.name : (db[campTableSort.key] || 0);
+      if (av < bv) return campTableSort.asc ? -1 : 1;
+      if (av > bv) return campTableSort.asc ? 1 : -1;
+      return 0;
+    });
+  }
 
   if (allRows.length === 0) {
     document.getElementById('campTbody').innerHTML = '<tr><td colspan="' + colSpan + '" style="padding:20px;text-align:center;color:var(--muted);font-size:12px">데이터가 없어요</td></tr>';
@@ -1813,8 +1827,38 @@ function renderCampaignTable() {
   var html = '';
   var total = {cost:0, impressions:0, clicks:0, conversions:0, revenue:0, cart_conv:0, cart_rev:0};
 
-  for (var i = 0; i < allRows.length; i++) {
-    var r = allRows[i];
+  // 유형별 순서대로 렌더링
+  var typeOrder = activeChs.length === 1 ? activeChs : CH_TYPE_ORDER;
+  var orderedRows = [];
+  for (var ti = 0; ti < typeOrder.length; ti++) {
+    var chType = typeOrder[ti];
+    if (rowsByType[chType] && rowsByType[chType].length > 0) {
+      orderedRows.push({isSectionHeader: true, ch: chType});
+      for (var ri = 0; ri < rowsByType[chType].length; ri++) {
+        orderedRows.push(rowsByType[chType][ri]);
+      }
+    }
+  }
+
+  var showSectionHeaders = (activeChs.length > 1 || (ck.indexOf('all') !== -1));
+
+  for (var i = 0; i < orderedRows.length; i++) {
+    var item = orderedRows[i];
+
+    // 섹션 헤더 행
+    if (item.isSectionHeader) {
+      if (!showSectionHeaders) continue;
+      var ts = CH_TYPE_STYLE[item.ch] || {label: CH_NAME[item.ch], bg:'rgba(0,0,0,0.04)', border:'rgba(0,0,0,0.1)', dot:'#888'};
+      html += '<tr style="background:' + ts.bg + ';border-top:1px solid ' + ts.border + ';border-bottom:1px solid ' + ts.border + '">';
+      html += '<td colspan="' + colSpan + '" style="padding:6px 14px;font-family:\'Inter\',sans-serif;font-size:11px;font-weight:600;color:var(--text)">';
+      html += '<span style="display:inline-flex;align-items:center;gap:6px">';
+      html += '<span style="width:7px;height:7px;border-radius:50%;background:' + ts.dot + ';display:inline-block;flex-shrink:0"></span>';
+      html += ts.label;
+      html += '</span></td></tr>';
+      continue;
+    }
+
+    var r = item;
     var d2 = calc(r);
     var expKey = r.name + '__' + r.ch;
     var isExp  = !!expandedCamps[expKey];
@@ -1829,6 +1873,7 @@ function renderCampaignTable() {
     for (var j = 0; j < CAMP_COLS.length; j++) html += tdNum(d2[CAMP_COLS[j].key], CAMP_COLS[j].type);
     var ext2 = calcExtended(r);
     for (var j = 0; j < EXTRA_COLS.length; j++) html += '<td style="padding:8px 14px;text-align:right;font-family:\'Inter\',sans-serif;font-size:12px;font-variant-numeric:tabular-nums;color:var(--text);border-left:' + (j===0?'1px solid var(--border2)':'none') + '">' + fmt(ext2[EXTRA_COLS[j].key], EXTRA_COLS[j].type) + '</td>';
+    html += '<td style="padding:8px 14px;text-align:center"></td>';
     html += '</tr>';
 
       if (campPrevMode) {
@@ -1840,6 +1885,7 @@ function renderCampaignTable() {
           if (multiCh) html += '<td></td>';
           for (var j = 0; j < CAMP_COLS.length; j++) html += '<td style="padding:3px 14px 6px;text-align:right;font-family:\'Inter\',sans-serif;font-size:11px;font-variant-numeric:tabular-nums;color:#2d3748">' + fmt(pd2[CAMP_COLS[j].key], CAMP_COLS[j].type) + changeArrow(d2[CAMP_COLS[j].key], pd2[CAMP_COLS[j].key], CAMP_COLS[j].type) + '</td>';
           for (var j = 0; j < EXTRA_COLS.length; j++) html += '<td style="padding:3px 14px 6px;text-align:right;font-family:\'Inter\',sans-serif;font-size:11px;font-variant-numeric:tabular-nums;color:#2d3748;border-left:' + (j===0?'1px solid var(--border2)':'none') + '">' + fmt(pext[EXTRA_COLS[j].key], EXTRA_COLS[j].type) + changeArrow(ext2[EXTRA_COLS[j].key], pext[EXTRA_COLS[j].key], EXTRA_COLS[j].type) + '</td>';
+          html += '<td></td>';
           html += '</tr>';
         }
       }
@@ -1859,17 +1905,18 @@ function renderCampaignTable() {
       html += '<tr style="border-bottom:1px solid var(--border);background:' + (grpMemoActive ? 'rgba(219,234,254,0.5)' : 'rgba(0,0,0,0.018)') + ';' + (hasCreatives ? 'cursor:pointer' : '') + '" ' + (hasCreatives ? 'onclick="event.stopPropagation();toggleGroupExpand(\'' + gExpKey.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')"' : 'onclick="event.stopPropagation()"') + '>';
       html += '<td style="padding:7px 14px 7px 30px;font-family:\'Noto Sans KR\',sans-serif;font-size:11px;color:#3a4150;white-space:nowrap;position:sticky;left:0;background:' + (grpMemoActive ? 'rgba(219,234,254,0.8)' : 'rgba(245,246,248,1)') + ';z-index:1">';
       html += '<span style="display:inline-block;width:16px;color:var(--muted);font-size:9px">' + (hasCreatives ? (gIsExp ? '▼' : '▶') : '') + '</span>';
-      html += grp.name;
-      if (grpMemoCount > 0) {
-        html += ' <span onclick="toggleMemoPanel(\'' + r.name.replace(/'/g,"\\'") + '\',\'' + grp.name.replace(/'/g,"\\'") + '\',event)" style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;background:#dbeafe;border-radius:3px;font-size:10px;color:#1d4ed8;font-weight:600;cursor:pointer;vertical-align:middle" title="메모 보기/닫기">' + grpMemoCount + '</span>';
-      } else {
-        html += ' <span onclick="toggleMemoPanel(\'' + r.name.replace(/'/g,"\\'") + '\',\'' + grp.name.replace(/'/g,"\\'") + '\',event)" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border:1px dashed #d1d5db;border-radius:3px;font-size:10px;color:#d1d5db;cursor:pointer;vertical-align:middle;line-height:1" title="메모 추가">+</span>';
-      }
-      html += '</td>';
+      html += grp.name + '</td>';
       if (multiCh) html += '<td></td>';
       for (var j = 0; j < CAMP_COLS.length; j++) html += tdNumSub(gd[CAMP_COLS[j].key], CAMP_COLS[j].type);
       var gext = calcExtended(grp);
       for (var j = 0; j < EXTRA_COLS.length; j++) html += '<td style="padding:6px 14px;text-align:right;font-family:\'Inter\',sans-serif;font-size:11px;font-variant-numeric:tabular-nums;color:#374151;border-left:' + (j===0?'1px solid var(--border2)':'none') + '">' + fmt(gext[EXTRA_COLS[j].key], EXTRA_COLS[j].type) + '</td>';
+      html += '<td style="padding:6px 10px;text-align:center;white-space:nowrap">';
+      if (grpMemoCount > 0) {
+        html += '<span onclick="toggleMemoPanel(\'' + r.name.replace(/'/g,"\\'") + '\',\'' + grp.name.replace(/'/g,"\\'") + '\',event)" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;background:#dbeafe;border-radius:4px;font-size:11px;color:#1d4ed8;font-weight:600;cursor:pointer" title="메모 보기/닫기">' + grpMemoCount + '</span>';
+      } else {
+        html += '<span onclick="toggleMemoPanel(\'' + r.name.replace(/'/g,"\\'") + '\',\'' + grp.name.replace(/'/g,"\\'") + '\',event)" style="font-size:13px;color:#9ca3af;cursor:pointer" title="메모 추가">+</span>';
+      }
+      html += '</td>';
       html += '</tr>';
       if (grpMemoActive) {
         html += renderMemoPanel(r.name, grp.name, colSpan);
@@ -1885,6 +1932,7 @@ function renderCampaignTable() {
           if (multiCh) html += '<td></td>';
           for (var j = 0; j < CAMP_COLS.length; j++) html += '<td style="padding:2px 14px 5px;text-align:right;font-family:\'Inter\',sans-serif;font-size:10px;font-variant-numeric:tabular-nums;color:#374151">' + fmt(pgd[CAMP_COLS[j].key], CAMP_COLS[j].type) + changeArrow(gd[CAMP_COLS[j].key], pgd[CAMP_COLS[j].key], CAMP_COLS[j].type) + '</td>';
           for (var j = 0; j < EXTRA_COLS.length; j++) html += '<td style="padding:2px 14px 5px;text-align:right;font-family:\'Inter\',sans-serif;font-size:10px;font-variant-numeric:tabular-nums;color:#374151;border-left:' + (j===0?'1px solid var(--border2)':'none') + '">' + fmt(pgext[EXTRA_COLS[j].key], EXTRA_COLS[j].type) + changeArrow(gext[EXTRA_COLS[j].key], pgext[EXTRA_COLS[j].key], EXTRA_COLS[j].type) + '</td>';
+          html += '<td></td>';
           html += '</tr>';
         }
       }
@@ -1900,6 +1948,7 @@ function renderCampaignTable() {
         for (var j = 0; j < CAMP_COLS.length; j++) html += tdNumCreative(crd[CAMP_COLS[j].key], CAMP_COLS[j].type);
         var crext = calcExtended(cr);
         for (var j = 0; j < EXTRA_COLS.length; j++) html += '<td style="padding:5px 14px;text-align:right;font-family:\'Inter\',sans-serif;font-size:11px;font-variant-numeric:tabular-nums;color:#4a5568;border-left:' + (j===0?'1px solid var(--border2)':'none') + '">' + fmt(crext[EXTRA_COLS[j].key], EXTRA_COLS[j].type) + '</td>';
+        html += '<td></td>';
         html += '</tr>';
 
         // 이전 동기간 소재 서브 행
@@ -1912,6 +1961,7 @@ function renderCampaignTable() {
             if (multiCh) html += '<td></td>';
             for (var j = 0; j < CAMP_COLS.length; j++) html += '<td style="padding:2px 14px 4px;text-align:right;font-family:\'Inter\',sans-serif;font-size:10px;font-variant-numeric:tabular-nums;color:#374151">' + fmt(pcrd[CAMP_COLS[j].key], CAMP_COLS[j].type) + changeArrow(crd[CAMP_COLS[j].key], pcrd[CAMP_COLS[j].key], CAMP_COLS[j].type) + '</td>';
             for (var j = 0; j < EXTRA_COLS.length; j++) html += '<td style="padding:2px 14px 4px;text-align:right;font-family:\'Inter\',sans-serif;font-size:10px;font-variant-numeric:tabular-nums;color:#374151;border-left:' + (j===0?'1px solid var(--border2)':'none') + '">' + fmt(pcrext[EXTRA_COLS[j].key], EXTRA_COLS[j].type) + changeArrow(crext[EXTRA_COLS[j].key], pcrext[EXTRA_COLS[j].key], EXTRA_COLS[j].type) + '</td>';
+            html += '<td></td>';
             html += '</tr>';
           }
         }
@@ -1921,7 +1971,6 @@ function renderCampaignTable() {
 
   if (allRows.length > 1) {
     var tc2 = calc(total);
-    html += '<tr style="border-top:2px solid var(--border2);background:var(--bg3)">';
     html += '<td style="padding:10px 14px;font-family:\'Noto Sans KR\',sans-serif;font-size:12px;font-weight:600">합계</td>';
     if (multiCh) html += '<td></td>';
     for (var j = 0; j < CAMP_COLS.length; j++) {
@@ -1931,6 +1980,7 @@ function renderCampaignTable() {
     for (var j = 0; j < EXTRA_COLS.length; j++) {
       html += '<td style="padding:10px 14px;text-align:right;font-family:\'Inter\',sans-serif;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;border-left:' + (j===0?'1px solid var(--border2)':'none') + '">' + fmt(totExt[EXTRA_COLS[j].key], EXTRA_COLS[j].type) + '</td>';
     }
+    html += '<td></td>';
     html += '</tr>';
   }
   document.getElementById('campTbody').innerHTML = html;
@@ -2188,8 +2238,8 @@ function setProduct(btn) {
 
 // 제품 그룹 정의 ← 여기서 수정하세요
 var PRODUCT_GROUPS = {
-  '메인제품': ['헤드레스트', '프리시트', '비슬림', '방석', '허리쿠션', '프리백커버', '콘솔쿠션', '핸들커버', '킥매트', '1열목쿠션'],
-  '기타제품': ['대시보드커버', '데스크매트', '라나매트', '루미락', '모네틱', '사운드픽셀', '심포라', '전자기기', '트렁크정리함', '하이퍼젯', '차키케이스'],
+  '메인제품': ['헤드레스트', '핸들커버', '방석', '킥매트', '허리쿠션', '프리백커버', '콘솔쿠션'],
+  '기타제품': ['대시보드커버', '데스크매트', '라나매트', '루미락', '모네틱', '사운드픽셀', '심포라', '전자기기', '트렁크정리함', '하이퍼젯'],
   '공통': ['공통']
 };
 var PRODUCT_GROUP_COLORS = {'메인제품': '#4f8ef7', '기타제품': '#1D9E75', '공통': '#888780'};
@@ -2434,8 +2484,6 @@ function setPreset(btn, days) {
   yesterday.setDate(yesterday.getDate() - 1);
   var from = new Date(yesterday);
   from.setDate(yesterday.getDate() - days + 1);
-  var minDate = new Date('2026-02-01');
-  if (from < minDate) from = minDate;
   document.getElementById('dateFrom').value = from.toISOString().slice(0, 10);
   document.getElementById('dateTo').value   = yesterday.toISOString().slice(0, 10);
   updateLabel();
@@ -2449,49 +2497,7 @@ function applyRange() {
   for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
   updateLabel();
   saveDateRange();
-  sheetsCache.aimban = null; campaignCache = {};
-  renderWithData();
-}
-
-// 전체 기간 조회
-function setAllRange(btn) {
-  var btns = document.querySelectorAll('.date-btn');
-  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
-  btn.classList.add('active');
-  document.getElementById('dateFrom').value = '2026-02-01';
-  var today = new Date();
-  today.setDate(today.getDate() - 1);
-  document.getElementById('dateTo').value = today.toISOString().slice(0, 10);
-  updateLabel();
-  saveDateRange();
-  sheetsCache.aimban = null; campaignCache = {};
-  renderWithData();
-}
-
-// 날짜 범위 이동 (dir: -1=이전, 1=다음)
-function shiftDateRange(dir) {
-  var from = new Date(document.getElementById('dateFrom').value);
-  var to   = new Date(document.getElementById('dateTo').value);
-  var days = Math.round((to - from) / (1000 * 60 * 60 * 24)) + 1;
-  var newFrom = new Date(from);
-  var newTo   = new Date(to);
-  newFrom.setDate(from.getDate() + dir * days);
-  newTo.setDate(to.getDate() + dir * days);
-  // 최소 날짜 제한 (2026-02-01)
-  var minDate = new Date('2026-02-01');
-  if (newFrom < minDate) {
-    var diff = Math.round((minDate - newFrom) / (1000 * 60 * 60 * 24));
-    newFrom.setDate(newFrom.getDate() + diff);
-    newTo.setDate(newTo.getDate() + diff);
-  }
-  document.getElementById('dateFrom').value = newFrom.toISOString().slice(0, 10);
-  document.getElementById('dateTo').value   = newTo.toISOString().slice(0, 10);
-  // 프리셋 버튼 비활성화
-  var btns = document.querySelectorAll('.date-btn');
-  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
-  updateLabel();
-  saveDateRange();
-  sheetsCache.aimban = null; campaignCache = {};
+  sheetsCache.aimban = null; campaignCache = {}; // 날짜 바뀌면 캐시 초기화
   renderWithData();
 }
 
@@ -2516,7 +2522,7 @@ function updateLabel() {
 
 
 // ── 제품별 데이터 테이블 ──────────────────────────────────────────────────
-var prodSelectedCols = ['cost','revenue','roas','conversions','cpa','cvr','clicks','cpc','ctr','impressions','cpm'];
+var prodSelectedCols = ['cost','revenue','roas','conversions','cpa','clicks','ctr','impressions'];
 var prodTableSort = {key: 'cost', asc: false};
 var prodPrevMode = false;
 
@@ -2584,7 +2590,18 @@ function renderProductTable() {
   for (var i = 0; i < PROD_COLS.length; i++) {
     headHtml += '<th style="' + thBase + ';text-align:right" onclick="sortProdTable(this.dataset.k)" data-k="' + PROD_COLS[i].key + '">' + PROD_COLS[i].label + sortArrow(PROD_COLS[i].key, prodTableSort) + '</th>';
   }
-
+  var EXTRA = [
+    {key:'conversions', label:'구매완료수',   type:'num'},
+    {key:'cart_conv',   label:'장바구니수',   type:'num'},
+    {key:'revenue',     label:'구매완료매출', type:'won'},
+    {key:'cart_rev',    label:'장바구니매출', type:'won'},
+    {key:'total_conv',  label:'총전환수',     type:'num'},
+    {key:'total_rev',   label:'총매출',       type:'won'},
+    {key:'total_cpa',   label:'총CPA',        type:'cpc'}
+  ];
+  for (var i = 0; i < EXTRA.length; i++) {
+    headHtml += '<th style="' + thBase + ';text-align:right;border-left:' + (i===0 ? '1px solid var(--border2)' : 'none') + '">' + EXTRA[i].label + '</th>';
+  }
   document.getElementById('prodTableHead').innerHTML = headHtml;
 
   var prodMap = {};
@@ -2594,7 +2611,7 @@ function renderProductTable() {
     if (!dateStr || dateStr < dateFrom || dateStr > dateTo) continue;
     var prod = (r['제품'] || '').trim() || '(미분류)';
     if (!prodMap[prod]) prodMap[prod] = {name:prod, cost:0, impressions:0, clicks:0, conversions:0, revenue:0, cart_conv:0, cart_rev:0};
-    prodMap[prod].cost        += Number(r['총비용(vat+)'])     || 0;
+    prodMap[prod].cost        += Number(r['총비용(vat-)'])     || 0;
     prodMap[prod].impressions += Number(r['노출수'])            || 0;
     prodMap[prod].clicks      += Number(r['클릭수'])            || 0;
     prodMap[prod].conversions += Number(r['구매완료 전환수'])    || 0;
@@ -2605,7 +2622,7 @@ function renderProductTable() {
 
   var allRows = Object.values(prodMap).filter(function(r){ return r.impressions > 0 || r.conversions > 0; });
   allRows.sort(function(a, b) {
-    var da = calc(a), db = calc(b);
+    var da = calcExtended(a), db = calcExtended(b);
     var av = prodTableSort.key === 'name' ? a.name : (da[prodTableSort.key] || 0);
     var bv = prodTableSort.key === 'name' ? b.name : (db[prodTableSort.key] || 0);
     if (av < bv) return prodTableSort.asc ? -1 : 1;
@@ -2622,7 +2639,7 @@ function renderProductTable() {
   var total = {cost:0, impressions:0, clicks:0, conversions:0, revenue:0, cart_conv:0, cart_rev:0};
   for (var i = 0; i < allRows.length; i++) {
     var r = allRows[i];
-    var d = calc(r);
+    var d = calcExtended(r);
     total.cost += r.cost; total.impressions += r.impressions; total.clicks += r.clicks;
     total.conversions += r.conversions; total.revenue += r.revenue;
     total.cart_conv += (r.cart_conv||0); total.cart_rev += (r.cart_rev||0);
@@ -2630,6 +2647,9 @@ function renderProductTable() {
     html += '<td style="padding:10px 14px;font-size:12px;color:var(--text);white-space:nowrap;position:sticky;left:0;background:var(--bg2);z-index:1">' + r.name + '</td>';
     for (var j = 0; j < PROD_COLS.length; j++) {
       html += '<td style="padding:8px 14px;text-align:right;font-size:12px;font-variant-numeric:tabular-nums;color:var(--text)">' + fmt(d[PROD_COLS[j].key], PROD_COLS[j].type) + '</td>';
+    }
+    for (var j = 0; j < EXTRA.length; j++) {
+      html += '<td style="padding:8px 14px;text-align:right;font-size:12px;font-variant-numeric:tabular-nums;color:var(--text);border-left:' + (j===0 ? '1px solid var(--border2)' : 'none') + '">' + fmt(d[EXTRA[j].key], EXTRA[j].type) + '</td>';
     }
     html += '</tr>';
     if (prodPrevMode) {
@@ -2642,7 +2662,7 @@ function renderProductTable() {
         var pprod = (pr['제품'] || '').trim() || '(미분류)';
         if (pprod !== r.name) continue;
         if (!prevProdMap[pprod]) prevProdMap[pprod] = {name:pprod, cost:0, impressions:0, clicks:0, conversions:0, revenue:0, cart_conv:0, cart_rev:0};
-        prevProdMap[pprod].cost        += Number(pr['총비용(vat+)'])     || 0;
+        prevProdMap[pprod].cost        += Number(pr['총비용(vat-)'])     || 0;
         prevProdMap[pprod].impressions += Number(pr['노출수'])            || 0;
         prevProdMap[pprod].clicks      += Number(pr['클릭수'])            || 0;
         prevProdMap[pprod].conversions += Number(pr['구매완료 전환수'])    || 0;
@@ -2650,21 +2670,27 @@ function renderProductTable() {
         prevProdMap[pprod].cart_conv   += Number(pr['장바구니 전환수'])    || 0;
         prevProdMap[pprod].cart_rev    += Number(pr['장바구니 매출액'])    || 0;
       }
-      var pd = prevProdMap[r.name] ? calc(prevProdMap[r.name]) : calc({cost:0,impressions:0,clicks:0,conversions:0,revenue:0,cart_conv:0,cart_rev:0});
+      var pd = prevProdMap[r.name] ? calcExtended(prevProdMap[r.name]) : calcExtended({cost:0,impressions:0,clicks:0,conversions:0,revenue:0,cart_conv:0,cart_rev:0});
       html += '<tr style="border-bottom:1px solid var(--border);background:rgba(59,125,246,0.07)">';
       html += '<td style="padding:3px 14px 6px 18px;font-size:10px;color:#3b7de9;font-weight:500;white-space:nowrap;position:sticky;left:0;background:rgba(235,241,255,0.97);z-index:1">↳ 이전 동기간</td>';
       for (var j = 0; j < PROD_COLS.length; j++) {
         html += '<td style="padding:3px 14px 6px;text-align:right;font-size:11px;font-variant-numeric:tabular-nums;color:#374151">' + fmt(pd[PROD_COLS[j].key], PROD_COLS[j].type) + changeArrow(d[PROD_COLS[j].key], pd[PROD_COLS[j].key], PROD_COLS[j].type) + '</td>';
       }
+      for (var j = 0; j < EXTRA.length; j++) {
+        html += '<td style="padding:3px 14px 6px;text-align:right;font-size:11px;font-variant-numeric:tabular-nums;color:#374151;border-left:' + (j===0 ? '1px solid var(--border2)' : 'none') + '">' + fmt(pd[EXTRA[j].key], EXTRA[j].type) + changeArrow(d[EXTRA[j].key], pd[EXTRA[j].key], EXTRA[j].type) + '</td>';
+      }
       html += '</tr>';
     }
   }
   if (allRows.length > 1) {
-    var tc = calc(total);
+    var tc = calcExtended(total);
     html += '<tr style="border-top:2px solid var(--border2);background:var(--bg3)">';
     html += '<td style="padding:10px 14px;font-size:12px;font-weight:600">합계</td>';
     for (var j = 0; j < PROD_COLS.length; j++) {
       html += '<td style="padding:10px 14px;text-align:right;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums">' + fmt(tc[PROD_COLS[j].key], PROD_COLS[j].type) + '</td>';
+    }
+    for (var j = 0; j < EXTRA.length; j++) {
+      html += '<td style="padding:10px 14px;text-align:right;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;border-left:' + (j===0 ? '1px solid var(--border2)' : 'none') + '">' + fmt(tc[EXTRA[j].key], EXTRA[j].type) + '</td>';
     }
     html += '</tr>';
   }
