@@ -579,7 +579,8 @@ function addToHierarchy(hier, camp, group, creative, dateStr, dateFrom, dateTo, 
 // 하이퍼 NGFA 계층
 // 계층 캠페인 데이터 가져오기
 function getCampaignHierarchy(brKey, chKey, dateFrom, dateTo) {
-  var cacheKey = 'h__' + brKey + '__' + chKey + '__' + dateFrom + '__' + dateTo;
+  var filterKey = S.productGroup ? ('g__' + S.productGroup) : (S.product === 'all' ? 'all' : 'p__' + S.product);
+  var cacheKey = 'h__' + brKey + '__' + chKey + '__' + dateFrom + '__' + dateTo + '__' + filterKey;
   if (campaignCache[cacheKey]) return campaignCache[cacheKey];
   var result = {};
   if (brKey === 'aimban' && sheetsCache.aimban) {
@@ -953,6 +954,7 @@ function aggCalc(map) {
 }
 
 function fmt(n, t) {
+  if (typeof n !== 'number' || isNaN(n) || !isFinite(n)) n = 0;
   if (t === 'won')  return '₩' + Math.round(n).toLocaleString('ko-KR');
   if (t === 'pct')  return (n * 100).toFixed(2) + '%';
   if (t === 'roas') return (n * 100).toFixed(0) + '%';
@@ -1399,8 +1401,8 @@ var TABLE_COLS = [
   {key:'impressions', label:'노출',   type:'num'},
   {key:'cpm',         label:'CPM',    type:'cpc'}
 ];
-var selectedCols = ['cost','revenue','roas','conversions','cpa','cvr','clicks','cpc','ctr','impressions','cpm'];
-var campSelectedCols = ['cost','revenue','roas','conversions','cpa','clicks','ctr','impressions'];
+var selectedCols = TABLE_COLS.map(function(c){ return c.key; });
+var campSelectedCols = TABLE_COLS.map(function(c){ return c.key; });
 
 function buildCampColDropdown() {
   var html = '';
@@ -2222,7 +2224,6 @@ function setProduct(btn) {
   if (S.product === dp) {
     S.product = 'all';
     S.productGroup = '';
-    campaignCache = {};
     sheetsCache.aimban && (sheetsCache.aimban._filteredNSA = null);
     syncProductTabActive();
     renderWithData();
@@ -2230,7 +2231,6 @@ function setProduct(btn) {
   }
   S.product = dp;
   S.productGroup = '';
-  campaignCache = {};
   sheetsCache.aimban && (sheetsCache.aimban._filteredNSA = null);
   syncProductTabActive();
   renderWithData();
@@ -2311,7 +2311,6 @@ function setProductGroupAll(btn) {
   if (S.product === 'all' && S.productGroup === groupKey) {
     S.product = 'all';
     S.productGroup = '';
-    campaignCache = {};
     sheetsCache.aimban && (sheetsCache.aimban._filteredNSA = null);
     syncProductTabActive();
     renderWithData();
@@ -2319,7 +2318,6 @@ function setProductGroupAll(btn) {
   }
   S.product = 'all';
   S.productGroup = groupKey;
-  campaignCache = {};
   sheetsCache.aimban && (sheetsCache.aimban._filteredNSA = null);
   syncProductTabActive();
   renderWithData();
@@ -2370,7 +2368,7 @@ function setThisMonth(btn) {
   document.getElementById('dateTo').value   = to;
   updateLabel();
   saveDateRange();
-  sheetsCache.aimban = null; campaignCache = {};
+
   renderWithData();
 }
 
@@ -2390,7 +2388,7 @@ function setLastMonth(btn) {
   document.getElementById('dateTo').value   = lastY + '-' + pad(lastM + 1) + '-' + pad(lastDay);
   updateLabel();
   saveDateRange();
-  sheetsCache.aimban = null; campaignCache = {};
+
   renderWithData();
 }
 
@@ -2435,7 +2433,7 @@ function setLastWeek(btn) {
   document.getElementById('dateTo').value   = lastSunday.toISOString().slice(0, 10);
   updateLabel();
   saveDateRange();
-  sheetsCache.aimban = null; campaignCache = {};
+
   renderWithData();
 }
 
@@ -2450,7 +2448,7 @@ function setYesterday(btn) {
   document.getElementById('dateTo').value   = d;
   updateLabel();
   saveDateRange();
-  sheetsCache.aimban = null; campaignCache = {};
+
   renderWithData();
 }
 
@@ -2472,7 +2470,7 @@ function setTwoWeeksAgo(btn) {
   document.getElementById('dateTo').value   = twoSunday.toISOString().slice(0, 10);
   updateLabel();
   saveDateRange();
-  sheetsCache.aimban = null; campaignCache = {};
+
   renderWithData();
 }
 
@@ -2488,7 +2486,7 @@ function setPreset(btn, days) {
   document.getElementById('dateTo').value   = yesterday.toISOString().slice(0, 10);
   updateLabel();
   saveDateRange();
-  sheetsCache.aimban = null; campaignCache = {};
+
   renderWithData();
 }
 
@@ -2497,7 +2495,7 @@ function applyRange() {
   for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
   updateLabel();
   saveDateRange();
-  sheetsCache.aimban = null; campaignCache = {}; // 날짜 바뀌면 캐시 초기화
+
   renderWithData();
 }
 
@@ -2522,7 +2520,7 @@ function updateLabel() {
 
 
 // ── 제품별 데이터 테이블 ──────────────────────────────────────────────────
-var prodSelectedCols = ['cost','revenue','roas','conversions','cpa','clicks','ctr','impressions'];
+var prodSelectedCols = TABLE_COLS.map(function(c){ return c.key; });
 var prodTableSort = {key: 'cost', asc: false};
 var prodPrevMode = false;
 
