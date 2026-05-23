@@ -2092,20 +2092,69 @@ function filterChTabs() {
   for (var i = 0; i < tabs.length; i++) {
     var ch = tabs[i].getAttribute('data-ch');
     if (ch === 'all') continue;
-    // 해당 채널에 데이터가 있는지 확인
     var hasData = false;
     for (var bi = 0; bi < bk.length; bi++) {
       var d = RAW[bk[bi]] && RAW[bk[bi]][ch];
-      if (d && (d.impressions > 0 || d.conversions > 0)) { hasData = true; break; }
+      if (d && d.impressions > 0) { hasData = true; break; }
     }
     tabs[i].style.display = hasData ? '' : 'none';
-    // 선택된 탭이 숨겨지면 '전체'로 리셋
     if (!hasData && tabs[i].classList.contains('active')) {
       tabs[i].classList.remove('active');
       S.ch = ['all'];
       document.querySelector('#chTabs .tab[data-ch="all"]').classList.add('active');
     }
   }
+}
+
+// 제품 탭 노출수 0인 항목 숨기기
+function filterProductTabs() {
+  var rows = sheetsCache.aimban ? (sheetsCache.aimban._rawNSA || []) : [];
+  var dateFrom = document.getElementById('dateFrom').value;
+  var dateTo   = document.getElementById('dateTo').value;
+  var activeChs = S.ch.indexOf('all') !== -1 ? CHS : S.ch;
+
+  // 현재 날짜 범위 + 캠페인유형 필터 기준 제품별 노출수 집계
+  var prodImpr = {};
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    var dateStr = (r['일자'] || '').slice(0, 10);
+    if (!dateStr || dateStr < dateFrom || dateStr > dateTo) continue;
+    var tp = r['캠페인유형'] || '';
+    var chKey = tp === '브랜드검색' ? 'nbsa' : tp === '쇼핑검색' ? 'ngfa' : tp === '파워컨텐츠' ? 'kakao' : 'nsa';
+    if (activeChs.indexOf(chKey) === -1) continue;
+    var prod = (r['제품'] || '').trim();
+    if (!prod) continue;
+    prodImpr[prod] = (prodImpr[prod] || 0) + (Number(r['노출수']) || 0);
+  }
+
+  // 각 제품 탭 표시/숨김
+  ['productTabsMain', 'productTabsEtc', 'productTabsCommon'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var tabs = el.querySelectorAll('.tab');
+    var visibleCount = 0;
+    for (var i = 0; i < tabs.length; i++) {
+      var dp = tabs[i].getAttribute('data-product');
+      var isAllBtn = dp && dp.indexOf('__all__') === 0;
+      if (isAllBtn) continue;
+      var hasImpr = (prodImpr[dp] || 0) > 0;
+      tabs[i].style.display = hasImpr ? '' : 'none';
+      if (hasImpr) visibleCount++;
+      // 숨겨진 탭이 선택 중이면 해제
+      if (!hasImpr && S.product === dp) {
+        S.product = 'all';
+        S.productGroup = '';
+        syncProductTabActive();
+      }
+    }
+    // 전체 버튼: 해당 그룹에 보이는 탭이 없으면 숨김
+    for (var i = 0; i < tabs.length; i++) {
+      var dp = tabs[i].getAttribute('data-product');
+      if (dp && dp.indexOf('__all__') === 0) {
+        tabs[i].style.display = visibleCount > 0 ? '' : 'none';
+      }
+    }
+  });
 }
 
 // ── 코멘트 기능 ──────────────────────────────────────────────────────────────
@@ -2211,6 +2260,7 @@ function render() {
   var cm = sumData(bk, ck, RAW);
   var pm = sumData(bk, ck, PREV);
   filterChTabs();
+  filterProductTabs();
   renderKPIs(cm, pm);
   buildMetricSelector();
   renderChart(cm, ck);
