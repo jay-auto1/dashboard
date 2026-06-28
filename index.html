@@ -23,6 +23,7 @@
   --nbsa: #7c5fc9;
   --kakao: #c4a800;
   --google_app: #d9720f;
+  --gfa: #16a085;
   --up: #1a9e52;
   --down: #d93636;
 }
@@ -89,6 +90,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 .ch-card[data-ch="nbsa"]::before { background: var(--nbsa); }
 .ch-card[data-ch="kakao"]::before { background: var(--kakao); }
 .ch-card[data-ch="google_app"]::before { background: var(--google_app); }
+.ch-card[data-ch="gfa"]::before { background: var(--gfa); }
 .ch-name { font-size: 12px; font-weight: 500; margin-bottom: 14px; display: flex; align-items: center; gap: 7px; }
 .ch-name .dot { width: 6px; height: 6px; border-radius: 50%; }
 .ch-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -152,6 +154,7 @@ tbody td:first-child { text-align: left; font-family: 'Noto Sans KR', sans-serif
 .ch-pill.nbsa   { background: rgba(167,139,250,.15); color: var(--nbsa); }
 .ch-pill.kakao  { background: rgba(249,208,0,.15);   color: var(--kakao); }
 .ch-pill.google_app { background: rgba(251,146,60,.15); color: var(--google_app); }
+.ch-pill.gfa { background: rgba(22,160,133,.15); color: var(--gfa); }
 
 /* Column dropdown */
 .col-dropdown-btn { font-family:'DM Mono',monospace; font-size:11px; padding:5px 12px; border-radius:6px; border:1px solid var(--border2); background:var(--bg3); color:var(--text); cursor:pointer; display:flex; align-items:center; gap:2px; white-space:nowrap; }
@@ -241,8 +244,9 @@ tbody td:first-child { text-align: left; font-family: 'Noto Sans KR', sans-serif
     <button class="tab active" data-ch="all" onclick="setCh(this)"><span class="dot" style="background:var(--text);opacity:.25"></span>전체</button>
     <button class="tab" data-ch="nsa" data-media-group="naver_sa" onclick="setCh(this)"><span class="dot" style="background:var(--nsa)"></span>파워링크</button>
     <button class="tab" data-ch="nbsa" data-media-group="naver_sa" onclick="setCh(this)"><span class="dot" style="background:var(--nbsa)"></span>브랜드검색</button>
-    <button class="tab" data-ch="ngfa" data-media-group="naver_gfa" onclick="setCh(this)"><span class="dot" style="background:var(--ngfa)"></span>쇼핑검색</button>
+    <button class="tab" data-ch="ngfa" data-media-group="naver_sa" onclick="setCh(this)"><span class="dot" style="background:var(--ngfa)"></span>쇼핑검색</button>
     <button class="tab" data-ch="kakao" data-media-group="naver_sa" onclick="setCh(this)"><span class="dot" style="background:var(--kakao)"></span>파워컨텐츠</button>
+    <button class="tab" data-ch="gfa" data-media-group="naver_gfa" onclick="setCh(this)"><span class="dot" style="background:var(--gfa)"></span>GFA</button>
     <button class="tab" data-ch="meta" data-media-group="meta" onclick="setCh(this)"><span class="dot" style="background:var(--meta)"></span>메타(자사몰)</button>
     <button class="tab" data-ch="google_app" data-media-group="meta" onclick="setCh(this)"><span class="dot" style="background:var(--google_app)"></span>메타(네이버)</button>
     <button class="tab" data-ch="google" data-media-group="google" onclick="setCh(this)"><span class="dot" style="background:var(--google)"></span>구글</button>
@@ -361,7 +365,7 @@ tbody td:first-child { text-align: left; font-family: 'Noto Sans KR', sans-serif
 <script>
 var EMPTY = {cost:0, revenue:0, clicks:0, impressions:0, conversions:0, app_installs:0};
 var RAW = {
-  aimban: {nsa:EMPTY, nbsa:EMPTY, ngfa:EMPTY, kakao:EMPTY, meta:EMPTY, google_app:EMPTY, google:EMPTY}
+  aimban: {nsa:EMPTY, nbsa:EMPTY, ngfa:EMPTY, kakao:EMPTY, meta:EMPTY, google_app:EMPTY, google:EMPTY, gfa:EMPTY}
 };
 
 // ── 메모 기능 ────────────────────────────────────────────────────────────────
@@ -552,7 +556,8 @@ var CSV_URLS_AIMBAN = {
   nsa: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR5vJK5czufZwfp-IsQZUpN70-kB8RrbJhtMCn1NKQepdxD9Iwmqh0bmav-3lvOQptieyAjM_ePP3fl/pub?gid=332969914&single=true&output=csv',
   meta_home: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR5vJK5czufZwfp-IsQZUpN70-kB8RrbJhtMCn1NKQepdxD9Iwmqh0bmav-3lvOQptieyAjM_ePP3fl/pub?gid=43222967&single=true&output=csv',
   meta_naver: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR5vJK5czufZwfp-IsQZUpN70-kB8RrbJhtMCn1NKQepdxD9Iwmqh0bmav-3lvOQptieyAjM_ePP3fl/pub?gid=340564651&single=true&output=csv',
-  google: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR5vJK5czufZwfp-IsQZUpN70-kB8RrbJhtMCn1NKQepdxD9Iwmqh0bmav-3lvOQptieyAjM_ePP3fl/pub?gid=531748918&single=true&output=csv'
+  google: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR5vJK5czufZwfp-IsQZUpN70-kB8RrbJhtMCn1NKQepdxD9Iwmqh0bmav-3lvOQptieyAjM_ePP3fl/pub?gid=531748918&single=true&output=csv',
+  gfa: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR5vJK5czufZwfp-IsQZUpN70-kB8RrbJhtMCn1NKQepdxD9Iwmqh0bmav-3lvOQptieyAjM_ePP3fl/pub?gid=703360997&single=true&output=csv'
 };
 
 var sheetsCache = {};
@@ -705,12 +710,14 @@ function loadAimban(callback) {
     fetch(CSV_URLS_AIMBAN.nsa).then(function(r){ return r.text(); }),
     fetch(CSV_URLS_AIMBAN.meta_home).then(function(r){ return r.text(); }),
     fetch(CSV_URLS_AIMBAN.meta_naver).then(function(r){ return r.text(); }),
-    fetch(CSV_URLS_AIMBAN.google).then(function(r){ return r.text(); })
+    fetch(CSV_URLS_AIMBAN.google).then(function(r){ return r.text(); }),
+    fetch(CSV_URLS_AIMBAN.gfa).then(function(r){ return r.text(); })
   ]).then(function(texts) {
     var nsaRows       = parseCSV(texts[0]);
     var metaHomeRows  = parseCSV(texts[1]);
     var metaNaverRows = parseCSV(texts[2]);
     var googleRows    = parseCSV(texts[3]);
+    var gfaRows       = parseCSV(texts[4]);
 
     var allRows = [];
 
@@ -748,24 +755,41 @@ function loadAimban(callback) {
     pushMetaRows(metaHomeRows, 'meta');        // 메타_자사몰
     pushMetaRows(metaNaverRows, 'google_app'); // 메타_네이버 (기존 google_app 컬러/CSS 슬롯 재사용)
 
-    // 구글 — 컬럼명이 일부 다름 (일/캠페인/비용(vat+)/전환/전환 가치)
-    // 구글 시트의 '일' 컬럼은 MM-DD-YYYY 형식 (예: 06-21-2026) → YYYY-MM-DD로 변환
-    function parseGoogleDate(raw) {
+    // 날짜가 YYYY-MM-DD / MM-DD-YYYY / YYYY.MM.DD. 등 여러 형식으로 들어올 수 있는 컬럼을 위한 공통 파서
+    function parseFlexDate(raw) {
       var s = (raw || '').trim();
-      var m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/); // MM-DD-YYYY
-      if (m) return m[3] + '-' + m[1] + '-' + m[2];
-      if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10); // 이미 YYYY-MM-DD인 경우 대비
+      if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);                 // YYYY-MM-DD
+      var m1 = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);                            // MM-DD-YYYY
+      if (m1) return m1[3] + '-' + m1[1] + '-' + m1[2];
+      var m2 = s.match(/^(\d{4})\.(\d{2})\.(\d{2})\.?$/);                       // YYYY.MM.DD.
+      if (m2) return m2[1] + '-' + m2[2] + '-' + m2[3];
       return '';
     }
+
+    // 구글 — 컬럼명이 일부 다름 (일/캠페인/비용(vat+)/전환/전환 가치)
     for (var i = 0; i < googleRows.length; i++) {
       var r = googleRows[i];
-      var dateStr = parseGoogleDate(r['일']);
+      var dateStr = parseFlexDate(r['일']);
       if (!dateStr) continue;
       allRows.push({
         ch: 'google', date: dateStr, product: (r['제품']||'').trim(),
         camp: r['캠페인']||'(미분류)', group: null, creative: null,
         cost: Number(r['비용(vat+)'])||0, impressions: Number(r['노출수'])||0, clicks: Number(r['클릭수'])||0,
         conversions: Number(r['전환'])||0, revenue: Number(r['전환 가치'])||0,
+        cart_conv: 0, cart_rev: 0
+      });
+    }
+
+    // 네이버 GFA — 광고 그룹 이름/캠페인 이름/기간/총비용(vat+)/구매완료 수/구매완료 전환매출액/제품
+    for (var i = 0; i < gfaRows.length; i++) {
+      var r = gfaRows[i];
+      var dateStr = parseFlexDate(r['기간']);
+      if (!dateStr) continue;
+      allRows.push({
+        ch: 'gfa', date: dateStr, product: (r['제품']||'').trim(),
+        camp: r['캠페인 이름']||'(미분류)', group: r['광고 그룹 이름']||'', creative: null,
+        cost: Number(r['총비용(vat+)'])||0, impressions: Number(r['노출수'])||0, clicks: Number(r['클릭수'])||0,
+        conversions: Number(r['구매완료 수'])||0, revenue: Number(r['구매완료 전환매출액'])||0,
         cart_conv: 0, cart_rev: 0
       });
     }
@@ -863,11 +887,11 @@ var PREV = {};
 })();
 
 var ALL_BRANDS = ['aimban'];
-var CHS = ['nsa', 'nbsa', 'ngfa', 'kakao', 'meta', 'google_app', 'google'];
-var CH_NAME  = {nsa: '파워링크', nbsa: '브랜드검색', ngfa: '쇼핑검색', kakao: '파워컨텐츠', meta: '메타(자사몰)', google_app: '메타(네이버)', google: '구글'};
-var CH_COLOR = {meta: 'var(--meta)', google: 'var(--google)', kakao: 'var(--kakao)', ngfa: 'var(--ngfa)', nsa: 'var(--nsa)', nbsa: 'var(--nbsa)', google_app: 'var(--google_app)'};
-var CH_HEX   = {meta: '#4f8ef7', google: '#f4a044', kakao: '#f9d000', ngfa: '#03c75a', nsa: '#00b4d8', nbsa: '#a78bfa', google_app: '#d9720f'};
-var CH_SHORT = {nsa: '파워링크', nbsa: '브랜드검색', ngfa: '쇼핑검색', kakao: '파워컨텐츠', meta: '메타자사', google_app: '메타네이버', google: '구글'};
+var CHS = ['nsa', 'nbsa', 'ngfa', 'kakao', 'meta', 'google_app', 'google', 'gfa'];
+var CH_NAME  = {nsa: '파워링크', nbsa: '브랜드검색', ngfa: '쇼핑검색', kakao: '파워컨텐츠', meta: '메타(자사몰)', google_app: '메타(네이버)', google: '구글', gfa: '네이버GFA'};
+var CH_COLOR = {meta: 'var(--meta)', google: 'var(--google)', kakao: 'var(--kakao)', ngfa: 'var(--ngfa)', nsa: 'var(--nsa)', nbsa: 'var(--nbsa)', google_app: 'var(--google_app)', gfa: 'var(--gfa)'};
+var CH_HEX   = {meta: '#4f8ef7', google: '#f4a044', kakao: '#f9d000', ngfa: '#03c75a', nsa: '#00b4d8', nbsa: '#a78bfa', google_app: '#d9720f', gfa: '#16a085'};
+var CH_SHORT = {nsa: '파워링크', nbsa: '브랜드검색', ngfa: '쇼핑검색', kakao: '파워컨텐츠', meta: '메타자사', google_app: '메타네이버', google: '구글', gfa: 'GFA'};
 
 var CHART_METRICS = [
   {key: 'cost',        label: '비용',   type: 'won',  color: '#4f8ef7'},
@@ -920,7 +944,7 @@ function brandKeys() {
 
 function chKeys() {
   if (S.ch.indexOf('all') !== -1) return CHS;
-  return S.ch.length > 0 ? S.ch : CHS;
+  return S.ch;
 }
 
 function sumData(bk, ck, dataset) {
@@ -1805,7 +1829,7 @@ function renderCampaignTable() {
   var allRows = Object.values(hierMerged).filter(function(r){ return r.impressions > 0 || r.conversions > 0; });
 
   // 캠페인유형 매핑 (ch key → 유형명/색상)
-  var CH_TYPE_ORDER = ['meta', 'google_app', 'google', 'ngfa', 'nsa', 'nbsa', 'kakao'];
+  var CH_TYPE_ORDER = ['meta', 'google_app', 'google', 'gfa', 'ngfa', 'nsa', 'nbsa', 'kakao'];
   var CH_TYPE_STYLE = {
     ngfa:  {label:'쇼핑검색',   bg:'rgba(0,153,74,0.08)',   border:'rgba(0,153,74,0.25)',   dot:'#00994a'},
     nsa:   {label:'파워링크',   bg:'rgba(0,151,184,0.08)',  border:'rgba(0,151,184,0.25)',  dot:'#0097b8'},
@@ -1813,7 +1837,8 @@ function renderCampaignTable() {
     kakao: {label:'파워컨텐츠', bg:'rgba(196,168,0,0.08)',  border:'rgba(196,168,0,0.25)',  dot:'#c4a800'},
     meta:  {label:'메타(자사몰)', bg:'rgba(79,142,247,0.08)', border:'rgba(79,142,247,0.25)', dot:'#4f8ef7'},
     google_app: {label:'메타(네이버)', bg:'rgba(217,114,15,0.08)', border:'rgba(217,114,15,0.25)', dot:'#d9720f'},
-    google: {label:'구글', bg:'rgba(244,160,68,0.08)', border:'rgba(244,160,68,0.25)', dot:'#f4a044'}
+    google: {label:'구글', bg:'rgba(244,160,68,0.08)', border:'rgba(244,160,68,0.25)', dot:'#f4a044'},
+    gfa: {label:'네이버GFA', bg:'rgba(22,160,133,0.08)', border:'rgba(22,160,133,0.25)', dot:'#16a085'}
   };
 
   // 유형별로 그룹핑 후 각 그룹 내에서 정렬
@@ -2394,8 +2419,8 @@ function setProductGroupAll(btn) {
   renderWithData();
 }
 var MEDIA_GROUPS = {
-  naver_sa:  ['nsa', 'nbsa', 'kakao'],
-  naver_gfa: ['ngfa'],
+  naver_sa:  ['nsa', 'nbsa', 'ngfa', 'kakao'],
+  naver_gfa: ['gfa'],
   meta:      ['meta', 'google_app'],
   google:    ['google']
 };
