@@ -624,16 +624,6 @@ function loadAimban(callback) {
     }
 
     sheetsCache.aimban = {_allRows: allRows, _rawNSA: nsaRows};
-
-    // [임시 디버그] 구글 매출 파싱 확인 — 콘솔에서 결과 확인 후 필요 없으면 이 블록은 지워도 됩니다
-    (function(){
-      var gRows = allRows.filter(function(x){ return x.ch === 'google'; });
-      var gRevSum = gRows.reduce(function(a,x){ return a + x.revenue; }, 0);
-      var gConvSum = gRows.reduce(function(a,x){ return a + x.conversions; }, 0);
-      console.log('[디버그] 구글 원본 헤더:', googleRows.length ? Object.keys(googleRows[0]) : '(데이터 없음)');
-      console.log('[디버그] 구글 원본 첫 행:', googleRows[0]);
-      console.log('[디버그] 구글 변환 행 수:', gRows.length, '매출합:', gRevSum, '전환수합:', gConvSum);
-    })();
     buildProductTabs(allRows.map(function(x){ return {'제품': x.product}; }));
     showLoading(false);
     callback(sheetsCache.aimban);
