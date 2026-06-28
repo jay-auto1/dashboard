@@ -120,6 +120,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 .lc-axis-text { font-family: 'Inter', sans-serif; font-size: 7px; fill: var(--muted); font-variant-numeric: tabular-nums; }
 .lc-line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .lc-dot { stroke-width: 2; cursor: pointer; }
+.hoverband:hover { fill: rgba(0,0,0,0.045) !important; }
 
 /* Tooltip */
 .tip { position: fixed; background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px; padding: 7px 11px; font-family: 'Inter', sans-serif; font-size: 11px; color: var(--text); pointer-events: none; opacity: 0; transition: opacity .12s; white-space: nowrap; z-index: 9999; }
@@ -367,187 +368,6 @@ var EMPTY = {cost:0, revenue:0, clicks:0, impressions:0, conversions:0, app_inst
 var RAW = {
   aimban: {nsa:EMPTY, nbsa:EMPTY, ngfa:EMPTY, kakao:EMPTY, meta:EMPTY, google_app:EMPTY, google:EMPTY, gfa:EMPTY}
 };
-
-// ── 메모 기능 ────────────────────────────────────────────────────────────────
-var MEMO_API_URL = 'https://script.google.com/macros/s/AKfycbwGTBTQPkyYJLkPvFNF4mAWUaoAm1xSYos8CgxXYQXMtM75YNINjE6YxjH_WpURuTiaWw/exec';
-var memoData = {};
-var memoLoaded = false;
-var activeMemoKey = null;
-
-function getMemoAuthor() {
-  return localStorage.getItem('memoAuthorName') || '';
-}
-
-function setMemoAuthor(name) {
-  localStorage.setItem('memoAuthorName', name);
-}
-
-function promptAuthorIfNeeded() {
-  var name = getMemoAuthor();
-  if (!name) {
-    name = prompt('메모에 표시될 이름을 입력해주세요 (한 번만 입력하면 저장돼요):');
-    if (name && name.trim()) {
-      setMemoAuthor(name.trim());
-      return name.trim();
-    }
-    return '익명';
-  }
-  return name;
-}
-
-function loadMemos() {
-  fetch(MEMO_API_URL)
-    .then(function(r){ return r.json(); })
-    .then(function(res){
-      memoData = {};
-      if (res.result === 'ok' && res.data) {
-        res.data.forEach(function(row){
-          var key = (row.campaign || '') + '__' + (row.adgroup || '');
-          if (!memoData[key]) memoData[key] = [];
-          memoData[key].push(row);
-        });
-      }
-      memoLoaded = true;
-      renderCampaignTable();
-    })
-    .catch(function(){ memoLoaded = true; });
-}
-
-function getMemoCount(campaign, adgroup) {
-  var key = campaign + '__' + adgroup;
-  return (memoData[key] || []).length;
-}
-
-function getNowDatetime() {
-  var now = new Date();
-  var pad = function(n){ return n < 10 ? '0' + n : n; };
-  return now.getFullYear() + '.' + pad(now.getMonth()+1) + '.' + pad(now.getDate());
-}
-
-function toggleMemoPanel(campaign, adgroup, event) {
-  if (event) event.stopPropagation();
-  var key = campaign + '__' + adgroup;
-  activeMemoKey = (activeMemoKey === key) ? null : key;
-  renderCampaignTable();
-  if (activeMemoKey) {
-    setTimeout(function(){
-      var el = document.getElementById('memo-panel-' + key.replace(/[^a-zA-Z0-9가-힣]/g, '_'));
-      if (el) el.scrollIntoView({behavior:'smooth', block:'nearest'});
-    }, 100);
-  }
-}
-
-function saveMemo(campaign, adgroup) {
-  var key = campaign + '__' + adgroup;
-  var safeId = key.replace(/[^a-zA-Z0-9가-힣]/g, '_');
-  var ta = document.getElementById('memo-input-' + safeId);
-  if (!ta || !ta.value.trim()) return;
-  var memoText = ta.value.trim();
-  var dt = getNowDatetime();
-  var author = promptAuthorIfNeeded();
-
-  var btn = document.getElementById('memo-save-btn-' + safeId);
-  if (btn) { btn.disabled = true; btn.textContent = '저장 중...'; }
-
-  fetch(MEMO_API_URL, {
-    method: 'POST',
-    body: JSON.stringify({action:'add', campaign:campaign, adgroup:adgroup, memo:memoText, datetime:dt, author:author}),
-    headers: {'Content-Type': 'text/plain'}
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(res){
-    if (res.result === 'ok') {
-      if (!memoData[key]) memoData[key] = [];
-      memoData[key].push({campaign:campaign, adgroup:adgroup, memo:memoText, datetime:dt, author:author, rowId:res.rowId});
-      ta.value = '';
-      renderCampaignTable();
-    } else {
-      alert('저장 실패: ' + (res.message || '오류'));
-      if (btn) { btn.disabled = false; btn.textContent = '저장'; }
-    }
-  })
-  .catch(function(){
-    alert('저장 중 오류가 발생했어요.');
-    if (btn) { btn.disabled = false; btn.textContent = '저장'; }
-  });
-}
-
-function deleteMemo(campaign, adgroup, rowId, event) {
-  if (event) event.stopPropagation();
-  if (!confirm('이 메모를 삭제할까요?')) return;
-  var key = campaign + '__' + adgroup;
-
-  fetch(MEMO_API_URL, {
-    method: 'POST',
-    body: JSON.stringify({action:'delete', rowId:rowId}),
-    headers: {'Content-Type': 'text/plain'}
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(res){
-    if (res.result === 'ok') {
-      if (memoData[key]) {
-        memoData[key] = memoData[key].filter(function(m){ return m.rowId !== rowId; });
-      }
-      renderCampaignTable();
-    }
-  });
-}
-
-function changeAuthorName(event) {
-  if (event) event.stopPropagation();
-  var current = getMemoAuthor();
-  var name = prompt('새 이름을 입력해주세요:', current);
-  if (name && name.trim()) {
-    setMemoAuthor(name.trim());
-    renderCampaignTable();
-  }
-}
-
-function renderMemoPanel(campaign, adgroup, colSpan) {
-  var key = campaign + '__' + adgroup;
-  var safeId = key.replace(/[^a-zA-Z0-9가-힣]/g, '_');
-  var memos = memoData[key] || [];
-  var currentAuthor = getMemoAuthor();
-
-  var memosHtml = '';
-  memos.forEach(function(m){
-    var rowIdEsc = (m.rowId || m.datetime || '').replace(/'/g, "\'");
-    var campEsc = campaign.replace(/'/g, "\'");
-    var grpEsc = adgroup.replace(/'/g, "\'");
-    memosHtml += '<div style="background:white;border:1px solid #dbeafe;border-radius:6px;padding:10px 12px;margin-bottom:8px">';
-    memosHtml += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">';
-    memosHtml += '<div style="display:flex;align-items:center;gap:8px">';
-    memosHtml += '<span style="font-size:11px;color:#3b82f6;font-weight:600">' + (m.datetime || '') + '</span>';
-    if (m.author) {
-      memosHtml += '<span style="font-size:11px;color:#6b7280;background:#f3f4f6;padding:1px 6px;border-radius:3px">' + (m.author || '') + '</span>';
-    }
-    memosHtml += '</div>';
-    memosHtml += '<span style="font-size:11px;color:#9ca3af;cursor:pointer" onclick="deleteMemo(\'' + campEsc + '\',\'' + grpEsc + '\',\'' + rowIdEsc + '\',event)">삭제</span>';
-    memosHtml += '</div>';
-    memosHtml += '<p style="margin:0;font-size:12px;color:#1f2937;line-height:1.6;white-space:pre-wrap">' + (m.memo || '').replace(/</g,'&lt;') + '</p>';
-    memosHtml += '</div>';
-  });
-
-  var authorLabel = currentAuthor ? currentAuthor : '익명';
-  var html = '<tr id="memo-panel-' + safeId + '" onclick="event.stopPropagation()">';
-  html += '<td colspan="' + colSpan + '" style="padding:0;border-bottom:2px solid #3b82f6">';
-  html += '<div style="background:#eff6ff;border-left:3px solid #3b82f6;padding:14px 20px">';
-  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">';
-  html += '<div style="font-size:12px;font-weight:600;color:#1d4ed8">📋 메모 — ' + adgroup + '</div>';
-  html += '<div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#6b7280">작성자: <span style="font-weight:500;color:#374151">' + authorLabel + '</span><span onclick="changeAuthorName(event)" style="cursor:pointer;color:#3b82f6;text-decoration:underline">변경</span></div>';
-  html += '</div>';
-  if (memosHtml) {
-    html += memosHtml;
-  } else {
-    html += '<div style="font-size:12px;color:#9ca3af;margin-bottom:10px">아직 메모가 없어요.</div>';
-  }
-  html += '<div style="background:white;border:1px solid #dbeafe;border-radius:6px;padding:10px 12px">';
-  html += '<textarea id="memo-input-' + safeId + '" placeholder="메모를 입력하세요..." onclick="event.stopPropagation()" style="width:100%;border:none;outline:none;resize:none;font-size:12px;color:#1f2937;background:transparent;min-height:52px;line-height:1.6;font-family:\'Noto Sans KR\',sans-serif;box-sizing:border-box"></textarea>';
-  html += '<div style="display:flex;justify-content:flex-end;margin-top:6px">';
-  html += '<button id="memo-save-btn-' + safeId + '" onclick="saveMemo(\'' + campaign.replace(/'/g,"\'") + '\',\'' + adgroup.replace(/'/g,"\'") + '\');event.stopPropagation()" style="font-size:12px;padding:5px 14px;border-radius:5px;border:1px solid #3b82f6;background:#3b82f6;color:white;cursor:pointer;font-family:\'Noto Sans KR\',sans-serif">저장</button>';
-  html += '</div></div></div></td></tr>';
-  return html;
-}
 
 // ── Google Sheets CSV 연동 ────────────────────────────────────────────────────
 // ── 아임반 CSV URL ─────────────────────────────────────────────────────────
@@ -1367,20 +1187,29 @@ function renderChart(cm, ck) {
     var dashAttr = isPrevSeries ? ' stroke-dasharray="4,3"' : '';
     svg += '<path d="' + lD + '" fill="none" stroke="' + col + '" stroke-width="0.5"' + dashAttr + ' stroke-linejoin="round" stroke-linecap="round"/>';
 
-    // Dots
+    // Dots (시각 표시용, 호버는 열 단위 밴드에서 처리)
     var showDots = N <= 31;
-    var mLabel = series[si].meta.label;
-    var mType  = series[si].meta.type;
-    var mVals  = series[si].values;
     for (var i = 0; i < N; i++) {
-      var tipTxt = (mLabel + ': ' + fmt(mVals[i], mType) + ' (' + DAYS[i] + ')').replace(/'/g, '&#39;');
       if (showDots) {
-        svg += '<circle cx="' + coords[i][0] + '" cy="' + coords[i][1] + '" r="3" fill="' + col + '" stroke="#ffffff" stroke-width="1.5" style="cursor:pointer" onmouseenter="showTip(event,\'' + tipTxt + '\')" onmouseleave="hideTip()"/>';
-      } else {
-        svg += '<circle cx="' + coords[i][0] + '" cy="' + coords[i][1] + '" r="6" fill="transparent" style="cursor:pointer" onmouseenter="showTip(event,\'' + tipTxt + '\')" onmouseleave="hideTip()"/>';
+        svg += '<circle cx="' + coords[i][0] + '" cy="' + coords[i][1] + '" r="3" fill="' + col + '" stroke="#ffffff" stroke-width="1.5"/>';
       }
     }
   }
+
+  // 열(날짜) 단위 호버 밴드 — 해당 날짜 전체 지표를 한번에 툴팁으로 표시
+  svg += '<g>';
+  for (var i = 0; i < N; i++) {
+    var leftB  = i === 0     ? PL       : (xp(i-1) + xp(i)) / 2;
+    var rightB = i === N - 1 ? (W - PR) : (xp(i) + xp(i+1)) / 2;
+    var tipParts = [];
+    for (var si2 = 0; si2 < series.length; si2++) {
+      var sm = series[si2].meta;
+      tipParts.push(sm.label + ': ' + fmt(series[si2].values[i], sm.type));
+    }
+    var tipTxt = (DAYS[i] + '  ' + tipParts.join('  ·  ')).replace(/'/g, '&#39;');
+    svg += '<rect x="' + leftB + '" y="' + PT + '" width="' + Math.max(rightB - leftB, 0) + '" height="' + cH + '" fill="transparent" class="hoverband" style="cursor:pointer" onmouseenter="showTip(event,\'' + tipTxt + '\')" onmouseleave="hideTip()"/>';
+  }
+  svg += '</g>';
 
   svg += '</svg>';
   document.getElementById('lineChartWrap').innerHTML = svg;
@@ -1762,11 +1591,10 @@ function renderCampaignTable() {
   for (var j = 0; j < EXTRA_COLS.length; j++) {
     headHtml += '<th style="' + thBase + ';text-align:right;border-left:1px solid var(--border2)" onclick="sortCampTable(\'' + EXTRA_COLS[j].key + '\')">' + EXTRA_COLS[j].label + sortArrow(EXTRA_COLS[j].key, campTableSort) + '</th>';
   }
-  headHtml += '<th style="' + thBase + ';text-align:center;width:52px;cursor:default">메모</th>';
   document.getElementById('campTableHead').innerHTML = headHtml;
 
   var multiCh = activeChs.length > 1;
-  var colSpan = CAMP_COLS.length + EXTRA_COLS.length + 2 + (multiCh ? 1 : 0);
+  var colSpan = CAMP_COLS.length + EXTRA_COLS.length + 1 + (multiCh ? 1 : 0);
 
   // 캠페인별 계층 데이터 수집
   var hierMerged = {};
@@ -1917,7 +1745,6 @@ function renderCampaignTable() {
     for (var j = 0; j < CAMP_COLS.length; j++) html += tdNum(d2[CAMP_COLS[j].key], CAMP_COLS[j].type);
     var ext2 = calcExtended(r);
     for (var j = 0; j < EXTRA_COLS.length; j++) html += '<td style="padding:8px 14px;text-align:right;font-family:\'Inter\',sans-serif;font-size:12px;font-variant-numeric:tabular-nums;color:var(--text);border-left:' + (j===0?'1px solid var(--border2)':'none') + '">' + fmt(ext2[EXTRA_COLS[j].key], EXTRA_COLS[j].type) + '</td>';
-    html += '<td style="padding:8px 14px;text-align:center"></td>';
     html += '</tr>';
 
       if (campPrevMode) {
@@ -1929,7 +1756,6 @@ function renderCampaignTable() {
           if (multiCh) html += '<td></td>';
           for (var j = 0; j < CAMP_COLS.length; j++) html += '<td style="padding:3px 14px 6px;text-align:right;font-family:\'Inter\',sans-serif;font-size:11px;font-variant-numeric:tabular-nums;color:#2d3748">' + fmt(pd2[CAMP_COLS[j].key], CAMP_COLS[j].type) + changeArrow(d2[CAMP_COLS[j].key], pd2[CAMP_COLS[j].key], CAMP_COLS[j].type) + '</td>';
           for (var j = 0; j < EXTRA_COLS.length; j++) html += '<td style="padding:3px 14px 6px;text-align:right;font-family:\'Inter\',sans-serif;font-size:11px;font-variant-numeric:tabular-nums;color:#2d3748;border-left:' + (j===0?'1px solid var(--border2)':'none') + '">' + fmt(pext[EXTRA_COLS[j].key], EXTRA_COLS[j].type) + changeArrow(ext2[EXTRA_COLS[j].key], pext[EXTRA_COLS[j].key], EXTRA_COLS[j].type) + '</td>';
-          html += '<td></td>';
           html += '</tr>';
         }
       }
@@ -1943,28 +1769,15 @@ function renderCampaignTable() {
       var gIsExp  = !!expandedGroups[gExpKey];
       var hasCreatives = Object.keys(grp.creatives || {}).filter(function(k){ return k; }).length > 0;
 
-      var grpMemoCount = getMemoCount(r.name, grp.name);
-      var grpMemoKey = r.name + '__' + grp.name;
-      var grpMemoActive = (activeMemoKey === grpMemoKey);
-      html += '<tr style="border-bottom:1px solid var(--border);background:' + (grpMemoActive ? 'rgba(219,234,254,0.5)' : 'rgba(0,0,0,0.018)') + ';' + (hasCreatives ? 'cursor:pointer' : '') + '" ' + (hasCreatives ? 'onclick="event.stopPropagation();toggleGroupExpand(\'' + gExpKey.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')"' : 'onclick="event.stopPropagation()"') + '>';
-      html += '<td style="padding:7px 14px 7px 30px;font-family:\'Noto Sans KR\',sans-serif;font-size:11px;color:#3a4150;white-space:nowrap;position:sticky;left:0;background:' + (grpMemoActive ? 'rgba(219,234,254,0.8)' : 'rgba(245,246,248,1)') + ';z-index:1">';
+      html += '<tr style="border-bottom:1px solid var(--border);background:rgba(0,0,0,0.018);' + (hasCreatives ? 'cursor:pointer' : '') + '" ' + (hasCreatives ? 'onclick="toggleGroupExpand(\'' + gExpKey.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')"' : '') + '>';
+      html += '<td style="padding:7px 14px 7px 30px;font-family:\'Noto Sans KR\',sans-serif;font-size:11px;color:#3a4150;white-space:nowrap;position:sticky;left:0;background:rgba(245,246,248,1);z-index:1">';
       html += '<span style="display:inline-block;width:16px;color:var(--muted);font-size:9px">' + (hasCreatives ? (gIsExp ? '▼' : '▶') : '') + '</span>';
       html += grp.name + '</td>';
       if (multiCh) html += '<td></td>';
       for (var j = 0; j < CAMP_COLS.length; j++) html += tdNumSub(gd[CAMP_COLS[j].key], CAMP_COLS[j].type);
       var gext = calcExtended(grp);
       for (var j = 0; j < EXTRA_COLS.length; j++) html += '<td style="padding:6px 14px;text-align:right;font-family:\'Inter\',sans-serif;font-size:11px;font-variant-numeric:tabular-nums;color:#374151;border-left:' + (j===0?'1px solid var(--border2)':'none') + '">' + fmt(gext[EXTRA_COLS[j].key], EXTRA_COLS[j].type) + '</td>';
-      html += '<td style="padding:6px 10px;text-align:center;white-space:nowrap">';
-      if (grpMemoCount > 0) {
-        html += '<span onclick="toggleMemoPanel(\'' + r.name.replace(/'/g,"\\'") + '\',\'' + grp.name.replace(/'/g,"\\'") + '\',event)" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;background:#dbeafe;border-radius:4px;font-size:11px;color:#1d4ed8;font-weight:600;cursor:pointer" title="메모 보기/닫기">' + grpMemoCount + '</span>';
-      } else {
-        html += '<span onclick="toggleMemoPanel(\'' + r.name.replace(/'/g,"\\'") + '\',\'' + grp.name.replace(/'/g,"\\'") + '\',event)" style="font-size:13px;color:#9ca3af;cursor:pointer" title="메모 추가">+</span>';
-      }
-      html += '</td>';
       html += '</tr>';
-      if (grpMemoActive) {
-        html += renderMemoPanel(r.name, grp.name, colSpan);
-      }
 
       // 이전 동기간 그룹 서브 행
       if (campPrevMode) {
@@ -1976,7 +1789,6 @@ function renderCampaignTable() {
           if (multiCh) html += '<td></td>';
           for (var j = 0; j < CAMP_COLS.length; j++) html += '<td style="padding:2px 14px 5px;text-align:right;font-family:\'Inter\',sans-serif;font-size:10px;font-variant-numeric:tabular-nums;color:#374151">' + fmt(pgd[CAMP_COLS[j].key], CAMP_COLS[j].type) + changeArrow(gd[CAMP_COLS[j].key], pgd[CAMP_COLS[j].key], CAMP_COLS[j].type) + '</td>';
           for (var j = 0; j < EXTRA_COLS.length; j++) html += '<td style="padding:2px 14px 5px;text-align:right;font-family:\'Inter\',sans-serif;font-size:10px;font-variant-numeric:tabular-nums;color:#374151;border-left:' + (j===0?'1px solid var(--border2)':'none') + '">' + fmt(pgext[EXTRA_COLS[j].key], EXTRA_COLS[j].type) + changeArrow(gext[EXTRA_COLS[j].key], pgext[EXTRA_COLS[j].key], EXTRA_COLS[j].type) + '</td>';
-          html += '<td></td>';
           html += '</tr>';
         }
       }
@@ -1992,7 +1804,6 @@ function renderCampaignTable() {
         for (var j = 0; j < CAMP_COLS.length; j++) html += tdNumCreative(crd[CAMP_COLS[j].key], CAMP_COLS[j].type);
         var crext = calcExtended(cr);
         for (var j = 0; j < EXTRA_COLS.length; j++) html += '<td style="padding:5px 14px;text-align:right;font-family:\'Inter\',sans-serif;font-size:11px;font-variant-numeric:tabular-nums;color:#4a5568;border-left:' + (j===0?'1px solid var(--border2)':'none') + '">' + fmt(crext[EXTRA_COLS[j].key], EXTRA_COLS[j].type) + '</td>';
-        html += '<td></td>';
         html += '</tr>';
 
         // 이전 동기간 소재 서브 행
@@ -2005,7 +1816,6 @@ function renderCampaignTable() {
             if (multiCh) html += '<td></td>';
             for (var j = 0; j < CAMP_COLS.length; j++) html += '<td style="padding:2px 14px 4px;text-align:right;font-family:\'Inter\',sans-serif;font-size:10px;font-variant-numeric:tabular-nums;color:#374151">' + fmt(pcrd[CAMP_COLS[j].key], CAMP_COLS[j].type) + changeArrow(crd[CAMP_COLS[j].key], pcrd[CAMP_COLS[j].key], CAMP_COLS[j].type) + '</td>';
             for (var j = 0; j < EXTRA_COLS.length; j++) html += '<td style="padding:2px 14px 4px;text-align:right;font-family:\'Inter\',sans-serif;font-size:10px;font-variant-numeric:tabular-nums;color:#374151;border-left:' + (j===0?'1px solid var(--border2)':'none') + '">' + fmt(pcrext[EXTRA_COLS[j].key], EXTRA_COLS[j].type) + changeArrow(crext[EXTRA_COLS[j].key], pcrext[EXTRA_COLS[j].key], EXTRA_COLS[j].type) + '</td>';
-            html += '<td></td>';
             html += '</tr>';
           }
         }
@@ -2024,7 +1834,6 @@ function renderCampaignTable() {
     for (var j = 0; j < EXTRA_COLS.length; j++) {
       html += '<td style="padding:10px 14px;text-align:right;font-family:\'Inter\',sans-serif;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;border-left:' + (j===0?'1px solid var(--border2)':'none') + '">' + fmt(totExt[EXTRA_COLS[j].key], EXTRA_COLS[j].type) + '</td>';
     }
-    html += '<td></td>';
     html += '</tr>';
   }
   document.getElementById('campTbody').innerHTML = html;
@@ -2714,15 +2523,7 @@ function renderProductTable() {
   for (var i = 0; i < PROD_COLS.length; i++) {
     headHtml += '<th style="' + thBase + ';text-align:right" onclick="sortProdTable(this.dataset.k)" data-k="' + PROD_COLS[i].key + '">' + PROD_COLS[i].label + sortArrow(PROD_COLS[i].key, prodTableSort) + '</th>';
   }
-  var EXTRA = [
-    {key:'conversions', label:'전환수',   type:'num'},
-    {key:'cart_conv',   label:'장바구니수',   type:'num'},
-    {key:'revenue',     label:'매출', type:'won'},
-    {key:'cart_rev',    label:'장바구니매출', type:'won'},
-    {key:'total_conv',  label:'총전환수',     type:'num'},
-    {key:'total_rev',   label:'총매출',       type:'won'},
-    {key:'total_cpa',   label:'총CPA',        type:'cpc'}
-  ];
+  var EXTRA = [];
   for (var i = 0; i < EXTRA.length; i++) {
     headHtml += '<th style="' + thBase + ';text-align:right;border-left:' + (i===0 ? '1px solid var(--border2)' : 'none') + '">' + EXTRA[i].label + '</th>';
   }
@@ -2826,7 +2627,6 @@ function renderProductTable() {
 buildMetricSelector();
 buildColDropdown();
 restoreDateRange();
-loadMemos();
 renderWithData();
 </script>
 </body>
