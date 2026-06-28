@@ -1779,18 +1779,8 @@ function renderCampaignTable() {
     .sort(function(a, b){ return campSelectedCols.indexOf(a.key) - campSelectedCols.indexOf(b.key); });
   buildCampColDropdown();
 
-  // 네이버 SA/DA 전용 추가 컬럼
-  var NAVER_CHS = ['nsa', 'nbsa', 'ngfa'];
-  var isNaverOnly = activeChs.length > 0 && activeChs.every(function(ch){ return NAVER_CHS.indexOf(ch) !== -1; });
-  var EXTRA_COLS = isNaverOnly ? [
-    {key:'conversions', label:'구매완료수',  type:'num'},
-    {key:'cart_conv',   label:'장바구니수',  type:'num'},
-    {key:'revenue',     label:'구매완료매출', type:'won'},
-    {key:'cart_rev',    label:'장바구니매출', type:'won'},
-    {key:'total_conv',  label:'총전환수',    type:'num'},
-    {key:'total_rev',   label:'총매출',      type:'won'},
-    {key:'total_cpa',   label:'총CPA',       type:'cpc'}
-  ] : [];
+  // 네이버 SA/DA 전용 추가 컬럼 (삭제됨)
+  var EXTRA_COLS = [];
 
   // 헤더
   var thBase = 'padding:9px 14px;font-family:\'Inter\',sans-serif;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border2);background:var(--bg3);white-space:nowrap;cursor:pointer;user-select:none';
