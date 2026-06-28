@@ -447,6 +447,15 @@ function getCampaignData(brKey, chKey, dateFrom, dateTo) {
   return result;
 }
 
+// 쉼표(천단위)·통화기호·공백이 섞인 숫자 셀도 안전하게 숫자로 변환
+function toNum(v) {
+  if (v === null || v === undefined) return 0;
+  var s = String(v).replace(/[,₩$%\s]/g, '').trim();
+  if (s === '' || s === '-') return 0;
+  var n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
+
 // CSV 한 줄 파싱 (따옴표 안 쉼표 처리)
 function splitCSVLine(line) {
   var result = [], cur = '', inQ = false;
@@ -551,9 +560,9 @@ function loadAimban(callback) {
       allRows.push({
         ch: ch, date: dateStr, product: (r['제품']||'').trim(),
         camp: r['캠페인명']||'(미분류)', group: r['광고그룹명']||'', creative: null,
-        cost: Number(r['총비용(vat+)'])||0, impressions: Number(r['노출수'])||0, clicks: Number(r['클릭수'])||0,
-        conversions: Number(r['구매완료 전환수'])||0, revenue: Number(r['구매완료 매출액'])||0,
-        cart_conv: Number(r['장바구니 전환수'])||0, cart_rev: Number(r['장바구니 매출액'])||0
+        cost: toNum(r['총비용(vat+)'])||0, impressions: toNum(r['노출수'])||0, clicks: toNum(r['클릭수'])||0,
+        conversions: toNum(r['구매완료 전환수'])||0, revenue: toNum(r['구매완료 매출액'])||0,
+        cart_conv: toNum(r['장바구니 전환수'])||0, cart_rev: toNum(r['장바구니 매출액'])||0
       });
     }
 
@@ -566,8 +575,8 @@ function loadAimban(callback) {
         allRows.push({
           ch: chKey, date: dateStr, product: (r['제품']||'').trim(),
           camp: r['캠페인명']||'(미분류)', group: r['광고그룹명']||'', creative: r['광고소재명']||null,
-          cost: Number(r['총비용(vat+)'])||0, impressions: Number(r['노출수'])||0, clicks: Number(r['클릭수'])||0,
-          conversions: Number(r['구매완료 전환수'])||0, revenue: Number(r['구매완료 매출액'])||0,
+          cost: toNum(r['총비용(vat+)'])||0, impressions: toNum(r['노출수'])||0, clicks: toNum(r['클릭수'])||0,
+          conversions: toNum(r['구매완료 전환수'])||0, revenue: toNum(r['구매완료 매출액'])||0,
           cart_conv: 0, cart_rev: 0
         });
       }
@@ -594,8 +603,8 @@ function loadAimban(callback) {
       allRows.push({
         ch: 'google', date: dateStr, product: (r['제품']||'').trim(),
         camp: r['캠페인']||'(미분류)', group: null, creative: null,
-        cost: Number(r['비용(vat+)'])||0, impressions: Number(r['노출수'])||0, clicks: Number(r['클릭수'])||0,
-        conversions: Number(r['전환'])||0, revenue: Number(r['전환 가치'])||0,
+        cost: toNum(r['비용(vat+)'])||0, impressions: toNum(r['노출수'])||0, clicks: toNum(r['클릭수'])||0,
+        conversions: toNum(r['전환'])||0, revenue: toNum(r['전환 가치'])||0,
         cart_conv: 0, cart_rev: 0
       });
     }
@@ -608,13 +617,23 @@ function loadAimban(callback) {
       allRows.push({
         ch: 'gfa', date: dateStr, product: (r['제품']||'').trim(),
         camp: r['캠페인 이름']||'(미분류)', group: r['광고 그룹 이름']||'', creative: null,
-        cost: Number(r['총비용(vat+)'])||0, impressions: Number(r['노출수'])||0, clicks: Number(r['클릭수'])||0,
-        conversions: Number(r['구매완료 수'])||0, revenue: Number(r['구매완료 전환매출액'])||0,
+        cost: toNum(r['총비용(vat+)'])||0, impressions: toNum(r['노출수'])||0, clicks: toNum(r['클릭수'])||0,
+        conversions: toNum(r['구매완료 수'])||0, revenue: toNum(r['구매완료 전환매출액'])||0,
         cart_conv: 0, cart_rev: 0
       });
     }
 
     sheetsCache.aimban = {_allRows: allRows, _rawNSA: nsaRows};
+
+    // [임시 디버그] 구글 매출 파싱 확인 — 콘솔에서 결과 확인 후 필요 없으면 이 블록은 지워도 됩니다
+    (function(){
+      var gRows = allRows.filter(function(x){ return x.ch === 'google'; });
+      var gRevSum = gRows.reduce(function(a,x){ return a + x.revenue; }, 0);
+      var gConvSum = gRows.reduce(function(a,x){ return a + x.conversions; }, 0);
+      console.log('[디버그] 구글 원본 헤더:', googleRows.length ? Object.keys(googleRows[0]) : '(데이터 없음)');
+      console.log('[디버그] 구글 원본 첫 행:', googleRows[0]);
+      console.log('[디버그] 구글 변환 행 수:', gRows.length, '매출합:', gRevSum, '전환수합:', gConvSum);
+    })();
     buildProductTabs(allRows.map(function(x){ return {'제품': x.product}; }));
     showLoading(false);
     callback(sheetsCache.aimban);
