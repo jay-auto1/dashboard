@@ -293,6 +293,28 @@ tbody td:first-child { text-align: left; font-family: 'Noto Sans KR', sans-serif
 
 <div class="table-section">
   <div class="table-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+    <span>일자별 데이터</span>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button id="dateTablePrevBtn" class="date-btn" onclick="toggleDateTablePrev()" style="font-size:11px;padding:4px 12px;border-radius:6px">동기간 비교</button>
+      <div style="position:relative">
+        <button class="col-dropdown-btn" id="dateColDropBtn" onclick="toggleDateColDrop()">
+          컬럼 선택 <span id="dateColCount"></span>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="margin-left:4px;vertical-align:middle"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="col-dropdown" id="dateColDropdown" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+  <div style="overflow-x:auto">
+    <table id="dateTable">
+      <thead><tr id="dateTableHead"></tr></thead>
+      <tbody id="dateTbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="table-section">
+  <div class="table-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
     <span>캠페인 유형별 데이터</span>
     <div style="display:flex;align-items:center;gap:8px">
       <button id="tablePrevBtn" class="date-btn" onclick="toggleTablePrev()" style="font-size:11px;padding:4px 12px;border-radius:6px">동기간 비교</button>
@@ -312,6 +334,7 @@ tbody td:first-child { text-align: left; font-family: 'Noto Sans KR', sans-serif
     </table>
   </div>
 </div>
+
 
 <div class="table-section" style="margin-top:16px">
   <div class="table-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
@@ -1357,6 +1380,7 @@ document.addEventListener('click', function(e) {
     document.getElementById('colDropdown').style.display = 'none';
     document.getElementById('campColDropdown').style.display = 'none';
     document.getElementById('prodColDropdown').style.display = 'none';
+    document.getElementById('dateColDropdown').style.display = 'none';
   }
 });
 
@@ -1466,6 +1490,157 @@ function buildColDropdown() {
   document.getElementById('colDropdown').innerHTML = html;
   var visibleCount = getEffectiveCols().length;
   document.getElementById('colCount').textContent = '(' + visibleCount + ')';
+}
+
+// ── 일자별 데이터 테이블 ──────────────────────────────────────────────────
+var dateSelectedCols = TABLE_COLS.map(function(c){ return c.key; });
+var dateTableSort = {key: 'date', asc: true};
+var dateTablePrevMode = false;
+
+function buildDateColDropdown() {
+  var html = '';
+  for (var i = 0; i < TABLE_COLS.length; i++) {
+    var col = TABLE_COLS[i];
+    var active = dateSelectedCols.indexOf(col.key) !== -1;
+    html += '<div class="col-item ' + (active ? 'col-active' : '') + '" onclick="event.stopPropagation();toggleDateCol(\'' + col.key + '\')">';
+    html += '<div class="col-check"></div>' + col.label + '</div>';
+  }
+  document.getElementById('dateColDropdown').innerHTML = html;
+  document.getElementById('dateColCount').textContent = '(' + dateSelectedCols.length + '/' + TABLE_COLS.length + ')';
+}
+
+function toggleDateColDrop() {
+  var dd = document.getElementById('dateColDropdown');
+  dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+}
+
+function toggleDateCol(key) {
+  var idx = dateSelectedCols.indexOf(key);
+  if (idx !== -1) {
+    if (dateSelectedCols.length <= 1) return;
+    dateSelectedCols.splice(idx, 1);
+  } else {
+    dateSelectedCols.push(key);
+    dateSelectedCols.sort(function(a, b) {
+      var ai = TABLE_COLS.findIndex(function(c){ return c.key === a; });
+      var bi = TABLE_COLS.findIndex(function(c){ return c.key === b; });
+      return ai - bi;
+    });
+  }
+  buildDateColDropdown();
+  renderDateTable();
+}
+
+function toggleDateTablePrev() {
+  dateTablePrevMode = !dateTablePrevMode;
+  var btn = document.getElementById('dateTablePrevBtn');
+  if (btn) {
+    btn.style.background  = dateTablePrevMode ? 'var(--text)' : 'transparent';
+    btn.style.color       = dateTablePrevMode ? 'var(--bg)'   : 'var(--muted)';
+    btn.style.borderColor = dateTablePrevMode ? 'var(--text)' : 'var(--border2)';
+  }
+  renderDateTable();
+}
+
+function sortDateTable(key) {
+  if (dateTableSort.key === key) { dateTableSort.asc = !dateTableSort.asc; }
+  else { dateTableSort.key = key; dateTableSort.asc = (key === 'date'); }
+  renderDateTable();
+}
+
+function fmtDateLabel(d) { return d.replace(/-/g, '.'); }
+
+function renderDateTable() {
+  var ck = chKeys();
+  var activeChs = ck.indexOf('all') !== -1 ? CHS : ck;
+  var dateFrom = document.getElementById('dateFrom').value;
+  var dateTo   = document.getElementById('dateTo').value;
+  var rangeDays = Math.round((new Date(dateTo) - new Date(dateFrom)) / 86400000) + 1;
+
+  var DATE_COLS = TABLE_COLS.filter(function(c){ return dateSelectedCols.indexOf(c.key) !== -1; });
+  buildDateColDropdown();
+
+  // 헤더
+  var headHtml = '<th style="cursor:pointer;user-select:none" onclick="sortDateTable(\'date\')">일자' + sortArrow('date', dateTableSort) + '</th>';
+  for (var i = 0; i < DATE_COLS.length; i++) {
+    var col = DATE_COLS[i];
+    headHtml += '<th style="cursor:pointer;user-select:none" onclick="sortDateTable(\'' + col.key + '\')">' + col.label + sortArrow(col.key, dateTableSort) + '</th>';
+  }
+  document.getElementById('dateTableHead').innerHTML = headHtml;
+
+  // 채널 필터된 rows를 날짜별로 집계 (날짜 범위 제한 없이 — 이전 동기간 조회용)
+  var rows = sheetsCache.aimban ? (sheetsCache.aimban._filteredRows || sheetsCache.aimban._allRows || []) : [];
+  var byDateAll = {};
+  for (var i = 0; i < rows.length; i++) {
+    var x = rows[i];
+    if (activeChs.indexOf(x.ch) === -1) continue;
+    if (!byDateAll[x.date]) byDateAll[x.date] = {cost:0, impressions:0, clicks:0, conversions:0, revenue:0};
+    byDateAll[x.date].cost        += x.cost;
+    byDateAll[x.date].impressions += x.impressions;
+    byDateAll[x.date].clicks      += x.clicks;
+    byDateAll[x.date].conversions += x.conversions;
+    byDateAll[x.date].revenue     += x.revenue;
+  }
+
+  var currentDates = Object.keys(byDateAll).filter(function(d){ return d >= dateFrom && d <= dateTo; });
+
+  if (currentDates.length === 0) {
+    var colSpanEmpty = DATE_COLS.length + 1;
+    document.getElementById('dateTbody').innerHTML = '<tr><td colspan="' + colSpanEmpty + '" style="padding:20px;text-align:center;color:var(--muted);font-size:12px">데이터가 없어요</td></tr>';
+    return;
+  }
+
+  // 정렬
+  currentDates.sort(function(a, b) {
+    if (dateTableSort.key === 'date') {
+      return dateTableSort.asc ? (a < b ? -1 : 1) : (a < b ? 1 : -1);
+    }
+    var da = calc(byDateAll[a]), db = calc(byDateAll[b]);
+    var av = da[dateTableSort.key] || 0, bv = db[dateTableSort.key] || 0;
+    return dateTableSort.asc ? av - bv : bv - av;
+  });
+
+  var EMPTY_D = {cost:0, impressions:0, clicks:0, conversions:0, revenue:0};
+  var html = '';
+  var total = {cost:0, impressions:0, clicks:0, conversions:0, revenue:0};
+
+  for (var i = 0; i < currentDates.length; i++) {
+    var dStr = currentDates[i];
+    var d = calc(byDateAll[dStr]);
+    total.cost += byDateAll[dStr].cost; total.impressions += byDateAll[dStr].impressions;
+    total.clicks += byDateAll[dStr].clicks; total.conversions += byDateAll[dStr].conversions;
+    total.revenue += byDateAll[dStr].revenue;
+
+    html += '<tr style="border-bottom:' + (dateTablePrevMode ? 'none' : '1px solid var(--border)') + '">';
+    html += '<td>' + fmtDateLabel(dStr) + '</td>';
+    for (var j = 0; j < DATE_COLS.length; j++) html += '<td>' + fmt(d[DATE_COLS[j].key], DATE_COLS[j].type) + '</td>';
+    html += '</tr>';
+
+    if (dateTablePrevMode) {
+      var prevD = new Date(dStr);
+      prevD.setDate(prevD.getDate() - rangeDays);
+      var prevDStr = prevD.toISOString().slice(0, 10);
+      var pData = byDateAll[prevDStr] || EMPTY_D;
+      var pd = calc(pData);
+      html += '<tr style="border-bottom:1px solid var(--border);background:rgba(59,125,246,0.07)">';
+      html += '<td style="padding:3px 14px 6px 18px;font-size:10px;color:#3b7de9;font-weight:500;font-family:\'Noto Sans KR\',sans-serif">↳ ' + fmtDateLabel(prevDStr) + '</td>';
+      for (var j = 0; j < DATE_COLS.length; j++) {
+        var col = DATE_COLS[j];
+        html += '<td style="padding:3px 14px 6px;font-size:11px;color:#374151;font-family:\'Inter\',sans-serif;font-variant-numeric:tabular-nums;text-align:right">' + fmt(pd[col.key], col.type) + changeArrow(d[col.key], pd[col.key], col.type) + '</td>';
+      }
+      html += '</tr>';
+    }
+  }
+
+  if (currentDates.length > 1) {
+    var tc = calc(total);
+    html += '<tr style="border-top:2px solid var(--border2);background:var(--bg3)">';
+    html += '<td style="font-weight:600;font-family:\'Noto Sans KR\',sans-serif;font-size:12px">합계</td>';
+    for (var j = 0; j < DATE_COLS.length; j++) html += '<td style="font-weight:600">' + fmt(tc[DATE_COLS[j].key], DATE_COLS[j].type) + '</td>';
+    html += '</tr>';
+  }
+
+  document.getElementById('dateTbody').innerHTML = html;
 }
 
 function renderTable(cm, ck) {
@@ -2124,6 +2299,7 @@ function render() {
   renderKPIs(cm, pm);
   buildMetricSelector();
   renderChart(cm, ck);
+  renderDateTable();
   renderTable(cm, ck);
   renderCampaignTable();
   renderProductTable();
