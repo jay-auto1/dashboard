@@ -79,6 +79,10 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 /* Section title */
 .section-title { font-family: 'Inter', sans-serif; font-size: 10px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; }
 
+/* Notice banner */
+.notice-banner { display: none; align-items: flex-start; gap: 10px; background: rgba(59,125,246,0.08); border: 1px solid rgba(59,125,246,0.25); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-family: 'Noto Sans KR', sans-serif; font-size: 13px; line-height: 1.5; color: var(--text); white-space: pre-wrap; }
+.notice-banner .notice-icon { flex-shrink: 0; font-size: 14px; line-height: 1.5; }
+
 /* Breakdown */
 .breakdown-grid { display: grid; gap: 10px; margin-bottom: 20px; }
 .ch-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; position: relative; overflow: hidden; }
@@ -189,6 +193,7 @@ tbody td:first-child { text-align: left; font-family: 'Noto Sans KR', sans-serif
 <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 
 <div class="page-wrap">
+<div class="notice-banner" id="noticeBanner"><span class="notice-icon">📢</span><span id="noticeText"></span></div>
 <div class="sticky-filters">
 <div class="header">
   <div>
@@ -400,10 +405,34 @@ var CSV_URLS_AIMBAN = {
   meta_home: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR5vJK5czufZwfp-IsQZUpN70-kB8RrbJhtMCn1NKQepdxD9Iwmqh0bmav-3lvOQptieyAjM_ePP3fl/pub?gid=43222967&single=true&output=csv',
   meta_naver: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR5vJK5czufZwfp-IsQZUpN70-kB8RrbJhtMCn1NKQepdxD9Iwmqh0bmav-3lvOQptieyAjM_ePP3fl/pub?gid=340564651&single=true&output=csv',
   google: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR5vJK5czufZwfp-IsQZUpN70-kB8RrbJhtMCn1NKQepdxD9Iwmqh0bmav-3lvOQptieyAjM_ePP3fl/pub?gid=531748918&single=true&output=csv',
-  gfa: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR5vJK5czufZwfp-IsQZUpN70-kB8RrbJhtMCn1NKQepdxD9Iwmqh0bmav-3lvOQptieyAjM_ePP3fl/pub?gid=703360997&single=true&output=csv'
+  gfa: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR5vJK5czufZwfp-IsQZUpN70-kB8RrbJhtMCn1NKQepdxD9Iwmqh0bmav-3lvOQptieyAjM_ePP3fl/pub?gid=703360997&single=true&output=csv',
+  notice: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR5vJK5czufZwfp-IsQZUpN70-kB8RrbJhtMCn1NKQepdxD9Iwmqh0bmav-3lvOQptieyAjM_ePP3fl/pub?gid=578905480&single=true&output=csv'
 };
 
 var sheetsCache = {};
+
+// ── 공지사항 (스프레드시트 1번째 셀 값 고정 표시) ──────────────────────────────
+function loadNotice() {
+  fetch(CSV_URLS_AIMBAN.notice)
+    .then(function(r){ return r.text(); })
+    .then(function(text) {
+      var firstLine = (text.split('\n')[0] || '').replace(/\r$/, '');
+      var cells = splitCSVLine(firstLine);
+      var notice = (cells[0] || '').trim();
+      var banner = document.getElementById('noticeBanner');
+      var textEl = document.getElementById('noticeText');
+      if (notice) {
+        textEl.textContent = notice;
+        banner.style.display = 'flex';
+      } else {
+        banner.style.display = 'none';
+      }
+    })
+    .catch(function() {
+      var banner = document.getElementById('noticeBanner');
+      if (banner) banner.style.display = 'none';
+    });
+}
 
 function showLoading(on) {
   var el = document.getElementById('loadingBanner');
@@ -2812,6 +2841,7 @@ function renderProductTable() {
 buildMetricSelector();
 buildColDropdown();
 restoreDateRange();
+loadNotice();
 renderWithData();
 </script>
 </body>
