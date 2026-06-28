@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>리포트</title>
+<title>아임반 네이버 SA</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
 <style>
@@ -225,16 +225,26 @@ tbody td:first-child { text-align: left; font-family: 'Noto Sans KR', sans-serif
 
 
 <div class="filter-row">
+  <span class="filter-label">매체</span>
+  <div class="tab-group" id="mediaTabs">
+    <button class="tab active" data-media="all" onclick="setMedia(this)"><span class="dot" style="background:var(--text);opacity:.25"></span>전체</button>
+    <button class="tab" data-media="naver" onclick="setMedia(this)"><span class="dot" style="background:var(--nsa)"></span>네이버</button>
+    <button class="tab" data-media="meta" onclick="setMedia(this)"><span class="dot" style="background:var(--meta)"></span>메타</button>
+    <button class="tab" data-media="google" onclick="setMedia(this)"><span class="dot" style="background:var(--google)"></span>구글</button>
+  </div>
+</div>
+
+<div class="filter-row">
   <span class="filter-label">캠페인 유형</span>
   <div class="tab-group" id="chTabs">
     <button class="tab active" data-ch="all" onclick="setCh(this)"><span class="dot" style="background:var(--text);opacity:.25"></span>전체</button>
-    <button class="tab" data-ch="nsa" onclick="setCh(this)"><span class="dot" style="background:var(--nsa)"></span>파워링크</button>
-    <button class="tab" data-ch="nbsa" onclick="setCh(this)"><span class="dot" style="background:var(--nbsa)"></span>브랜드검색</button>
-    <button class="tab" data-ch="ngfa" onclick="setCh(this)"><span class="dot" style="background:var(--ngfa)"></span>쇼핑검색</button>
-    <button class="tab" data-ch="kakao" onclick="setCh(this)"><span class="dot" style="background:var(--kakao)"></span>파워컨텐츠</button>
-    <button class="tab" data-ch="meta" onclick="setCh(this)"><span class="dot" style="background:var(--meta)"></span>메타(자사몰)</button>
-    <button class="tab" data-ch="google_app" onclick="setCh(this)"><span class="dot" style="background:var(--google_app)"></span>메타(네이버)</button>
-    <button class="tab" data-ch="google" onclick="setCh(this)"><span class="dot" style="background:var(--google)"></span>구글</button>
+    <button class="tab" data-ch="nsa" data-media-group="naver" onclick="setCh(this)"><span class="dot" style="background:var(--nsa)"></span>파워링크</button>
+    <button class="tab" data-ch="nbsa" data-media-group="naver" onclick="setCh(this)"><span class="dot" style="background:var(--nbsa)"></span>브랜드검색</button>
+    <button class="tab" data-ch="ngfa" data-media-group="naver" onclick="setCh(this)"><span class="dot" style="background:var(--ngfa)"></span>쇼핑검색</button>
+    <button class="tab" data-ch="kakao" data-media-group="naver" onclick="setCh(this)"><span class="dot" style="background:var(--kakao)"></span>파워컨텐츠</button>
+    <button class="tab" data-ch="meta" data-media-group="meta" onclick="setCh(this)"><span class="dot" style="background:var(--meta)"></span>메타(자사몰)</button>
+    <button class="tab" data-ch="google_app" data-media-group="meta" onclick="setCh(this)"><span class="dot" style="background:var(--google_app)"></span>메타(네이버)</button>
+    <button class="tab" data-ch="google" data-media-group="google" onclick="setCh(this)"><span class="dot" style="background:var(--google)"></span>구글</button>
   </div>
 </div>
 
@@ -887,7 +897,7 @@ function togglePrevWeek() {
   var cm = sumData(bk, ck, RAW);
   renderChart(cm, ck);
 }
-var S = {brand: 'aimban', sub: 'all', ch: ['all'], product: 'all', productGroup: ''};
+var S = {brand: 'aimban', sub: 'all', ch: ['all'], product: 'all', productGroup: '', media: 'all'};
 
 var DAYS = []; // 차트용 날짜 배열 (renderChart에서 동적 생성)
 var MULTS = {}; // 더 이상 사용하지 않음
@@ -2093,14 +2103,22 @@ function filterChTabs() {
   var tabs = document.querySelectorAll('#chTabs .tab');
   for (var i = 0; i < tabs.length; i++) {
     var ch = tabs[i].getAttribute('data-ch');
+    var mg = tabs[i].getAttribute('data-media-group');
     if (ch === 'all') continue;
+
+    // 매체 필터: 선택된 매체와 다른 그룹이면 숨김
+    if (S.media !== 'all' && mg !== S.media) {
+      tabs[i].style.display = 'none';
+      continue;
+    }
+
     var hasData = false;
     for (var bi = 0; bi < bk.length; bi++) {
       var d = RAW[bk[bi]] && RAW[bk[bi]][ch];
       if (d && d.impressions > 0) { hasData = true; break; }
     }
     tabs[i].style.display = hasData ? '' : 'none';
-    if (!hasData && tabs[i].classList.contains('active')) {
+    if (!hasData && tabs[i].classList.contains('active') && S.media === 'all') {
       tabs[i].classList.remove('active');
       S.ch = ['all'];
       document.querySelector('#chTabs .tab[data-ch="all"]').classList.add('active');
@@ -2374,12 +2392,38 @@ function setProductGroupAll(btn) {
   syncProductTabActive();
   renderWithData();
 }
+var MEDIA_GROUPS = {
+  naver: ['nsa', 'nbsa', 'ngfa', 'kakao'],
+  meta:  ['meta', 'google_app'],
+  google:['google']
+};
+
+function setMedia(btn) {
+  var media = btn.getAttribute('data-media');
+  S.media = media;
+  S.ch = (media === 'all') ? ['all'] : MEDIA_GROUPS[media].slice();
+
+  var mTabs = document.querySelectorAll('#mediaTabs .tab');
+  for (var i = 0; i < mTabs.length; i++) mTabs[i].classList.toggle('active', mTabs[i].getAttribute('data-media') === media);
+
+  var cTabs = document.querySelectorAll('#chTabs .tab');
+  for (var i = 0; i < cTabs.length; i++) {
+    var ch = cTabs[i].getAttribute('data-ch');
+    cTabs[i].classList.toggle('active', S.ch.indexOf(ch) !== -1);
+  }
+
+  renderWithData();
+}
+
 function setCh(btn) {
   var clicked = btn.getAttribute('data-ch');
 
   if (clicked === 'all') {
-    // 전체 클릭 → 모두 해제하고 전체만 선택
+    // 전체 클릭 → 모두 해제하고 전체만 선택 (매체 필터도 초기화)
     S.ch = ['all'];
+    S.media = 'all';
+    var mTabs0 = document.querySelectorAll('#mediaTabs .tab');
+    for (var mi = 0; mi < mTabs0.length; mi++) mTabs0[mi].classList.toggle('active', mTabs0[mi].getAttribute('data-media') === 'all');
   } else {
     // 개별 클릭
     var idx = S.ch.indexOf(clicked);
